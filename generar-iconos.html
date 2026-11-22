@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Generador de iconos Comenum</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; padding: 30px; background: #f3f0fa; }
+  canvas { width: 256px; height: 256px; border-radius: 40px; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+  button { display: block; margin: 20px auto; padding: 14px 24px; font-size: 18px; border: 0;
+           border-radius: 12px; background: #5b3ea8; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+<h2>Iconos de Comenum</h2>
+<canvas id="preview" width="512" height="512"></canvas>
+<button id="go">Descargar los 3 iconos</button>
+<p>Se descargarán: icon-512.png, icon-192.png y apple-touch-icon.png</p>
+<script>
+function draw(size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const x = c.getContext('2d');
+  const k = size / 512;
+  const bg = x.createLinearGradient(0, 0, size, size);
+  bg.addColorStop(0, '#667eea'); bg.addColorStop(1, '#764ba2');
+  x.fillStyle = bg; x.fillRect(0, 0, size, size);
+  const ring = x.createRadialGradient(210 * k, 200 * k, 20 * k, 256 * k, 256 * k, 175 * k);
+  ring.addColorStop(0, '#fff3a0'); ring.addColorStop(1, '#ffc400');
+  x.fillStyle = ring;
+  x.beginPath(); x.arc(256 * k, 256 * k, 170 * k, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#fff';
+  x.beginPath(); x.arc(256 * k, 256 * k, 118 * k, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#2b2150';
+  x.font = 'bold ' + (150 * k) + 'px Arial';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText('1', 256 * k, 268 * k);
+  return c;
+}
+function save(canvas, name) {
+  canvas.toBlob(b => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = name;
+    a.click();
+  });
+}
+document.getElementById('preview').getContext('2d').drawImage(draw(512), 0, 0);
+document.getElementById('go').onclick = () => {
+  save(draw(512), 'icon-512.png');
+  setTimeout(() => save(draw(192), 'icon-192.png'), 600);
+  setTimeout(() => save(draw(180), 'apple-touch-icon.png'), 1200);
+};
+</script>
+</body>
+</html>
