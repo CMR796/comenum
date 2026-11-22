@@ -394,6 +394,16 @@
   const P_WILD = 0.06;       // probabilidad de comodín
   const P_GOLD = 0.09;       // probabilidad de número dorado
 
+  // ---------- Estadísticas anónimas (GoatCounter) ----------
+  // Si el contador está bloqueado o sin conexión, no pasa nada: el juego sigue igual.
+  function track(path, title) {
+    try {
+      if (window.goatcounter && typeof window.goatcounter.count === 'function') {
+        window.goatcounter.count({ path: path, title: title || path, event: true });
+      }
+    } catch (e) {}
+  }
+
   // ---------- Logros ----------
   // type: eat (números comidos), streak (racha), level, score, gold, wild, games
   const ACHS = [
@@ -875,6 +885,7 @@
         THEMES.forEach(th => { if (th.req === a.id) msg += '  ·  🎨 ' + T.themes[th.id]; });
         showAch(msg);
         sfx('ach');
+        track('ach/' + a.id, 'Logro ' + a.id);
       }
     });
     if (changed) {
@@ -1169,6 +1180,7 @@
     hud();
     ['ovStart', 'ovOver', 'ovPause', 'ovAch'].forEach(close);
     startMusic();
+    track('game-start', 'Partida iniciada');
   }
   function showGameOver() {
     sfx('over');
@@ -1186,6 +1198,7 @@
     $('finalBest').textContent = best;
     $('newRecord').classList.toggle('hidden', !isRecord);
     open('ovOver');
+    track('game-over/level-' + S.level, 'Fin de partida en nivel ' + S.level);
   }
   function playAgain() {
     close('ovOver');
@@ -1217,6 +1230,7 @@
 
   // ---------- Compartir ----------
   async function share(score) {
+    track('share', 'Compartir');
     const url = location.href.split('#')[0];
     const text = score > 0 ? t('share_text_score', { s: score }) : t('share_text');
     if (navigator.share) {
@@ -1238,8 +1252,12 @@
     deferredPrompt = e;
     if (!isStandalone) $('btnInstall').classList.remove('hidden');
   });
-  window.addEventListener('appinstalled', () => $('btnInstall').classList.add('hidden'));
+  window.addEventListener('appinstalled', () => {
+    $('btnInstall').classList.add('hidden');
+    track('app-installed', 'App instalada');
+  });
   $('btnInstall').addEventListener('click', async () => {
+    track('install-click', 'Pulsa instalar');
     if (deferredPrompt) {
       deferredPrompt.prompt();
       try { await deferredPrompt.userChoice; } catch (e) {}
@@ -1289,6 +1307,7 @@
     lang = e.target.value;
     lsSet('comenum_lang', lang);
     applyLang();
+    track('lang/' + lang, 'Idioma ' + lang);
   });
 
   // Pausa automática: llamadas, cambio de app, bloqueo de pantalla, avisos flotantes
@@ -1341,5 +1360,8 @@
   }
 })();
 </script>
+
+<!-- Contador de visitas anónimo (GoatCounter) -->
+<script data-goatcounter="https://comenum.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
