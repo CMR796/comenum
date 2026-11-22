@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Comenum</title>
 <meta name="theme-color" content="#4b2c82">
-<meta name="description" content="Comenum: come los números antes de que lleguen al borde.">
+<meta name="description" content="Comenum">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -153,7 +153,8 @@
   }
   .overlay.open { display: flex; }
   .card {
-    width: min(88%, 340px); padding: 26px 22px; border-radius: 24px; text-align: center;
+    width: min(88%, 340px); max-height: 94%; overflow-y: auto;
+    padding: 22px 20px; border-radius: 24px; text-align: center;
     background: rgba(255,255,255,.97); color: #2b2150; box-shadow: 0 14px 40px rgba(0,0,0,.4);
   }
   .card h1 { font-size: 40px; letter-spacing: 1px; color: #5b3ea8; margin-bottom: 4px; }
@@ -163,7 +164,7 @@
   .card ul { text-align: left; margin: 8px 0 4px 20px; font-size: 14px; line-height: 1.5; }
   .big { font-size: 34px; font-weight: 900; color: #e6a100; }
   .btn {
-    display: block; width: 100%; margin-top: 12px; padding: 13px; border: none; border-radius: 14px;
+    display: block; width: 100%; margin-top: 10px; padding: 12px; border: none; border-radius: 14px;
     font-size: 17px; font-weight: 800; color: #fff; cursor: pointer;
     background: linear-gradient(135deg, #667eea, #764ba2);
   }
@@ -171,6 +172,23 @@
   .btn.ghost { background: #eee; color: #4b2c82; }
   .btn:active { transform: scale(.97); }
   .hidden { display: none !important; }
+
+  /* Selector de nivel inicial */
+  #levelPick { margin: 10px 0 2px; }
+  #levelPick .lpLabel { font-size: 14px; font-weight: 700; color: #4b2c82; }
+  .picker { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 6px; }
+  .picker button {
+    width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
+    background: #5b3ea8; color: #fff; font-size: 26px; line-height: 1;
+  }
+  .picker button:active { transform: scale(.92); }
+  .picker b { font-size: 32px; min-width: 44px; color: #5b3ea8; }
+
+  /* Selector de idioma */
+  #langSel {
+    margin-top: 12px; padding: 7px 10px; border-radius: 10px; border: 1px solid #ccc;
+    font-size: 14px; background: #fff; color: #2b2150;
+  }
 </style>
 </head>
 <body>
@@ -179,15 +197,15 @@
   <div class="topbar">
     <div>❤️ <b id="lives">3</b></div>
     <div>⏱️ <b id="time">00:00</b></div>
-    <div>Nivel <b id="level">1</b></div>
+    <div><span data-i18n="level"></span> <b id="level">1</b></div>
     <div class="spacer"></div>
-    <button class="ib" id="btnSound" aria-label="Sonido">🔊</button>
-    <button class="ib" id="btnPause" aria-label="Pausa">⏸️</button>
-    <button class="ib" id="btnHelp" aria-label="Ayuda">❓</button>
+    <button class="ib" id="btnSound" aria-label="Sound">🔊</button>
+    <button class="ib" id="btnPause" aria-label="Pause">⏸️</button>
+    <button class="ib" id="btnHelp" aria-label="Help">❓</button>
   </div>
 
   <div id="scoreWrap">
-    <div class="lbl">Puntuación</div>
+    <div class="lbl" data-i18n="score"></div>
     <div id="score">0</div>
     <div id="prog"><i id="progBar"></i></div>
   </div>
@@ -197,8 +215,8 @@
   <div id="area"><div id="effect"></div></div>
 
   <div class="controls">
-    <button class="cbtn" id="minus" aria-label="Restar">−</button>
-    <button class="cbtn" id="plus" aria-label="Sumar">+</button>
+    <button class="cbtn" id="minus" aria-label="-">−</button>
+    <button class="cbtn" id="plus" aria-label="+">+</button>
     <div id="display"><span id="dispNum">1</span></div>
   </div>
 
@@ -208,59 +226,69 @@
   <div class="overlay open" id="ovStart">
     <div class="card">
       <h1>Comenum</h1>
-      <p>Come los números antes de que lleguen al borde.</p>
-      <p>Tu récord: <span class="big" id="bestStart">0</span></p>
-      <button class="btn" id="btnPlay">▶ Jugar</button>
-      <button class="btn green" id="btnShareStart">Compartir con un amigo</button>
-      <button class="btn ghost" id="btnInstall">📲 Instalar en el móvil</button>
-      <button class="btn ghost" id="btnHowTo">❓ Cómo se juega</button>
+      <p data-i18n="tagline"></p>
+      <p><span data-i18n="record"></span>: <span class="big" id="bestStart">0</span></p>
+      <div id="levelPick" class="hidden">
+        <div class="lpLabel" data-i18n="start_level"></div>
+        <div class="picker">
+          <button id="lvMinus" aria-label="-">−</button>
+          <b id="lvVal">1</b>
+          <button id="lvPlus" aria-label="+">+</button>
+        </div>
+      </div>
+      <button class="btn" id="btnPlay" data-i18n="play"></button>
+      <button class="btn green" id="btnShareStart" data-i18n="share"></button>
+      <button class="btn ghost" id="btnInstall" data-i18n="install"></button>
+      <button class="btn ghost" id="btnHowTo" data-i18n="howto"></button>
+      <select id="langSel" aria-label="Language"></select>
     </div>
   </div>
 
   <!-- Pausa -->
   <div class="overlay" id="ovPause">
     <div class="card">
-      <h3>Juego en pausa</h3>
-      <button class="btn" id="btnResume">▶ Continuar</button>
+      <h3 data-i18n="pause_title"></h3>
+      <button class="btn" id="btnResume" data-i18n="resume"></button>
     </div>
   </div>
 
   <!-- Ayuda -->
   <div class="overlay" id="ovHelp" style="z-index:110">
     <div class="card">
-      <h3>¿Cómo se juega?</h3>
+      <h3 data-i18n="help_title"></h3>
       <ul>
-        <li>Los números entran por la derecha y avanzan hacia la izquierda.</li>
-        <li>Con − y + pon en el visor el mismo número que el primero de la izquierda (el marcado en blanco).</li>
-        <li>Toca el visor amarillo para comértelo.</li>
-        <li>Si un número toca el borde izquierdo pierdes una vida (máximo 6).</li>
-        <li>Toca las sorpresas: ❤️ vida, 🐌 más lento, ⚡ más rápido, 💥 se comen números.</li>
+        <li data-i18n="help1"></li>
+        <li data-i18n="help2"></li>
+        <li data-i18n="help3"></li>
+        <li data-i18n="help4"></li>
+        <li data-i18n="help5"></li>
+        <li data-i18n="help6"></li>
       </ul>
-      <button class="btn" id="btnHelpClose">Entendido</button>
+      <button class="btn" id="btnHelpClose" data-i18n="ok"></button>
     </div>
   </div>
 
   <!-- Instalar en iPhone -->
   <div class="overlay" id="ovIOS" style="z-index:110">
     <div class="card">
-      <h3>Instalar en iPhone</h3>
-      <p>1. Abre esta página en <b>Safari</b>.</p>
-      <p>2. Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba).</p>
-      <p>3. Elige <b>"Añadir a pantalla de inicio"</b>.</p>
-      <button class="btn" id="btnIOSClose">Entendido</button>
+      <h3 data-i18n="ios_title"></h3>
+      <p data-i18n="ios1"></p>
+      <p data-i18n="ios2"></p>
+      <p data-i18n="ios3"></p>
+      <button class="btn" id="btnIOSClose" data-i18n="ok"></button>
     </div>
   </div>
 
   <!-- Fin de partida -->
   <div class="overlay" id="ovOver">
     <div class="card">
-      <h2>¡Juego terminado!</h2>
-      <p id="newRecord" class="hidden"><b>🏆 ¡Nuevo récord!</b></p>
-      <p>Puntuación: <span class="big" id="finalScore">0</span></p>
-      <p>Nivel: <b id="finalLevel">1</b> · Tiempo: <b id="finalTime">00:00</b></p>
-      <p>Récord: <b id="finalBest">0</b></p>
-      <button class="btn" id="btnAgain">🔄 Jugar de nuevo</button>
-      <button class="btn green" id="btnShareOver">Compartir mi puntuación</button>
+      <h2 data-i18n="over_title"></h2>
+      <p id="newRecord" class="hidden"><b data-i18n="new_record"></b></p>
+      <p><span data-i18n="score"></span>: <span class="big" id="finalScore">0</span></p>
+      <p><span data-i18n="level"></span>: <b id="finalLevel">1</b> · <span data-i18n="time"></span>: <b id="finalTime">00:00</b></p>
+      <p><span data-i18n="record"></span>: <b id="finalBest">0</b></p>
+      <button class="btn" id="btnAgain" data-i18n="again"></button>
+      <button class="btn green" id="btnShareOver" data-i18n="share_score"></button>
     </div>
   </div>
 </div>
@@ -280,32 +308,237 @@
     ['#43e97b', '#1ba39c'], ['#fa709a', '#e8a317'], ['#5f72bd', '#9b23ea'],
     ['#ff9a56', '#e0455a'], ['#2193b0', '#6dd5ed']
   ];
-  const FUNNY = [
-    '¡Eres más lento que un caracol! 🐌', '¡Debes entrenar más los pulgares! 👍',
-    '¡Mi abuela es más rápida! 👵', '¿Estás dormido o qué? 😴',
-    '¡Hasta una tortuga te gana! 🐢', '¡Necesitas más café! ☕',
-    '¡Los números se ríen de ti! 😂', '¡Reflejos de perezoso! 🦥',
-    '¡Houston, tenemos un problema! 🚀', '¡Más concentración, campeón! 🎯'
-  ];
-
-  // ---------- Estado ----------
-  let S = newState();
-  function newState() {
-    return {
-      playing: false, paused: false, helpPaused: false,
-      score: 0, level: 1, lives: 3, player: 1, time: 0,
-      eaten: 0, goal: 10,
-      numbers: [], dist: SPACING, breath: 0,
-      speedMult: 1, effectLeft: 0, effectName: '',
-      surprises: [], nextSurprise: 8
-    };
-  }
 
   // ---------- Guardado local ----------
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   let best = parseInt(lsGet('comenum_best')) || 0;
+  let maxLevel = Math.max(1, parseInt(lsGet('comenum_maxlevel')) || 1);
   let muted = lsGet('comenum_mute') === '1';
+  let startLevel = 1;
+
+  // ---------- Idiomas ----------
+  const LANG_NAMES = { es: 'Español', en: 'English', fr: 'Français', de: 'Deutsch', it: 'Italiano', pt: 'Português' };
+  const I18N = {
+    es: {
+      tagline: `Come los números antes de que lleguen al borde.`,
+      record: `Récord`, play: `▶ Jugar`, share: `📤 Compartir con un amigo`,
+      install: `📲 Instalar en el móvil`, howto: `❓ Cómo se juega`,
+      start_level: `Empezar en el nivel`,
+      pause_title: `Juego en pausa`, resume: `▶ Continuar`,
+      help_title: `¿Cómo se juega?`,
+      help1: `Los números entran por la derecha y avanzan hacia la izquierda.`,
+      help2: `Con − y + pon en el visor el mismo número que el primero de la izquierda (el marcado en blanco).`,
+      help3: `Toca el visor amarillo para comértelo.`,
+      help4: `Si un número toca el borde izquierdo pierdes una vida (máximo 6).`,
+      help5: `Toca las sorpresas: ❤️ vida, 🐌 más lento, ⚡ más rápido, 💥 se comen números.`,
+      help6: `En ordenador: ← → para − y +, ↓ para comer, ↑ para coger una sorpresa.`,
+      ok: `Entendido`,
+      ios_title: `Instalar en iPhone`,
+      ios1: `1. Abre esta página en <b>Safari</b>.`,
+      ios2: `2. Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba).`,
+      ios3: `3. Elige <b>«Añadir a pantalla de inicio»</b>.`,
+      over_title: `¡Juego terminado!`, new_record: `🏆 ¡Nuevo récord!`,
+      score: `Puntuación`, level: `Nivel`, time: `Tiempo`,
+      again: `🔄 Jugar de nuevo`, share_score: `📤 Compartir mi puntuación`,
+      life_extra: `¡Vida extra! ❤️`, slower: `🐌 Más lento`, faster: `⚡ Más rápido`,
+      eaten: `¡Números comidos! 💥`, level_up: `¡Nivel {n}! 🎉`,
+      share_text_score: `¡He conseguido {s} puntos en Comenum! ¿Puedes superarme? 🔢`,
+      share_text: `Prueba Comenum, un juego rápido para comer números. ¿Cuántos aguantas? 🔢`,
+      funny: [`¡Eres más lento que un caracol! 🐌`, `¡Debes entrenar más los pulgares! 👍`, `¡Mi abuela es más rápida! 👵`,
+              `¿Estás dormido o qué? 😴`, `¡Hasta una tortuga te gana! 🐢`, `¡Necesitas más café! ☕`,
+              `¡Los números se ríen de ti! 😂`, `¡Reflejos de perezoso! 🦥`, `¡Houston, tenemos un problema! 🚀`,
+              `¡Más concentración, campeón! 🎯`]
+    },
+    en: {
+      tagline: `Eat the numbers before they reach the edge.`,
+      record: `Best`, play: `▶ Play`, share: `📤 Share with a friend`,
+      install: `📲 Install on your phone`, howto: `❓ How to play`,
+      start_level: `Start at level`,
+      pause_title: `Game paused`, resume: `▶ Resume`,
+      help_title: `How to play`,
+      help1: `Numbers enter from the right and move to the left.`,
+      help2: `Use − and + to set the display to the same number as the first one on the left (the one outlined in white).`,
+      help3: `Tap the yellow display to eat it.`,
+      help4: `If a number touches the left edge you lose a life (maximum 6).`,
+      help5: `Tap the surprises: ❤️ life, 🐌 slower, ⚡ faster, 💥 numbers eaten.`,
+      help6: `On a computer: ← → for − and +, ↓ to eat, ↑ to grab a surprise.`,
+      ok: `Got it`,
+      ios_title: `Install on iPhone`,
+      ios1: `1. Open this page in <b>Safari</b>.`,
+      ios2: `2. Tap the <b>Share</b> button (the square with an arrow pointing up).`,
+      ios3: `3. Choose <b>“Add to Home Screen”</b>.`,
+      over_title: `Game over!`, new_record: `🏆 New record!`,
+      score: `Score`, level: `Level`, time: `Time`,
+      again: `🔄 Play again`, share_score: `📤 Share my score`,
+      life_extra: `Extra life! ❤️`, slower: `🐌 Slower`, faster: `⚡ Faster`,
+      eaten: `Numbers eaten! 💥`, level_up: `Level {n}! 🎉`,
+      share_text_score: `I scored {s} points in Comenum! Can you beat me? 🔢`,
+      share_text: `Try Comenum, a fast game about eating numbers. How long can you last? 🔢`,
+      funny: [`Slower than a snail! 🐌`, `Time to train those thumbs! 👍`, `My grandma is faster! 👵`,
+              `Are you asleep? 😴`, `Even a turtle beats you! 🐢`, `You need more coffee! ☕`,
+              `The numbers are laughing at you! 😂`, `Sloth reflexes! 🦥`]
+    },
+    fr: {
+      tagline: `Mange les nombres avant qu'ils n'atteignent le bord.`,
+      record: `Record`, play: `▶ Jouer`, share: `📤 Partager avec un ami`,
+      install: `📲 Installer sur le téléphone`, howto: `❓ Comment jouer`,
+      start_level: `Commencer au niveau`,
+      pause_title: `Jeu en pause`, resume: `▶ Reprendre`,
+      help_title: `Comment jouer ?`,
+      help1: `Les nombres arrivent par la droite et avancent vers la gauche.`,
+      help2: `Avec − et +, affiche dans le compteur le même nombre que le premier à gauche (celui entouré de blanc).`,
+      help3: `Touche le compteur jaune pour le manger.`,
+      help4: `Si un nombre touche le bord gauche, tu perds une vie (maximum 6).`,
+      help5: `Touche les surprises : ❤️ vie, 🐌 plus lent, ⚡ plus rapide, 💥 nombres mangés.`,
+      help6: `Sur ordinateur : ← → pour − et +, ↓ pour manger, ↑ pour attraper une surprise.`,
+      ok: `Compris`,
+      ios_title: `Installer sur iPhone`,
+      ios1: `1. Ouvre cette page dans <b>Safari</b>.`,
+      ios2: `2. Appuie sur le bouton <b>Partager</b> (le carré avec une flèche vers le haut).`,
+      ios3: `3. Choisis <b>« Sur l'écran d'accueil »</b>.`,
+      over_title: `Partie terminée !`, new_record: `🏆 Nouveau record !`,
+      score: `Score`, level: `Niveau`, time: `Temps`,
+      again: `🔄 Rejouer`, share_score: `📤 Partager mon score`,
+      life_extra: `Vie en plus ! ❤️`, slower: `🐌 Plus lent`, faster: `⚡ Plus rapide`,
+      eaten: `Nombres mangés ! 💥`, level_up: `Niveau {n} ! 🎉`,
+      share_text_score: `J'ai marqué {s} points à Comenum ! Peux-tu me battre ? 🔢`,
+      share_text: `Essaie Comenum, un jeu rapide pour manger des nombres. Combien de temps tiens-tu ? 🔢`,
+      funny: [`Plus lent qu'un escargot ! 🐌`, `Entraîne un peu plus tes pouces ! 👍`, `Ma grand-mère est plus rapide ! 👵`,
+              `Tu dors ou quoi ? 😴`, `Même une tortue te bat ! 🐢`, `Il te faut plus de café ! ☕`,
+              `Les nombres se moquent de toi ! 😂`, `Des réflexes de paresseux ! 🦥`]
+    },
+    de: {
+      tagline: `Iss die Zahlen, bevor sie den Rand erreichen.`,
+      record: `Rekord`, play: `▶ Spielen`, share: `📤 Mit einem Freund teilen`,
+      install: `📲 Auf dem Handy installieren`, howto: `❓ Spielanleitung`,
+      start_level: `Starten bei Level`,
+      pause_title: `Spiel pausiert`, resume: `▶ Weiter`,
+      help_title: `Spielanleitung`,
+      help1: `Die Zahlen kommen von rechts und wandern nach links.`,
+      help2: `Stelle mit − und + im Display dieselbe Zahl ein wie die erste links (die weiß umrandete).`,
+      help3: `Tippe auf das gelbe Display, um sie zu essen.`,
+      help4: `Berührt eine Zahl den linken Rand, verlierst du ein Leben (maximal 6).`,
+      help5: `Tippe auf die Überraschungen: ❤️ Leben, 🐌 langsamer, ⚡ schneller, 💥 Zahlen gegessen.`,
+      help6: `Am Computer: ← → für − und +, ↓ zum Essen, ↑ für eine Überraschung.`,
+      ok: `Verstanden`,
+      ios_title: `Auf dem iPhone installieren`,
+      ios1: `1. Öffne diese Seite in <b>Safari</b>.`,
+      ios2: `2. Tippe auf <b>Teilen</b> (das Quadrat mit dem Pfeil nach oben).`,
+      ios3: `3. Wähle <b>„Zum Home-Bildschirm“</b>.`,
+      over_title: `Spiel vorbei!`, new_record: `🏆 Neuer Rekord!`,
+      score: `Punkte`, level: `Level`, time: `Zeit`,
+      again: `🔄 Nochmal spielen`, share_score: `📤 Meine Punktzahl teilen`,
+      life_extra: `Extraleben! ❤️`, slower: `🐌 Langsamer`, faster: `⚡ Schneller`,
+      eaten: `Zahlen gegessen! 💥`, level_up: `Level {n}! 🎉`,
+      share_text_score: `Ich habe {s} Punkte in Comenum erreicht! Kannst du mich schlagen? 🔢`,
+      share_text: `Probier Comenum aus, ein schnelles Spiel zum Zahlenessen. Wie lange hältst du durch? 🔢`,
+      funny: [`Langsamer als eine Schnecke! 🐌`, `Trainiere mehr deine Daumen! 👍`, `Meine Oma ist schneller! 👵`,
+              `Schläfst du? 😴`, `Sogar eine Schildkröte schlägt dich! 🐢`, `Du brauchst mehr Kaffee! ☕`,
+              `Die Zahlen lachen dich aus! 😂`, `Faultier-Reflexe! 🦥`]
+    },
+    it: {
+      tagline: `Mangia i numeri prima che arrivino al bordo.`,
+      record: `Record`, play: `▶ Gioca`, share: `📤 Condividi con un amico`,
+      install: `📲 Installa sul telefono`, howto: `❓ Come si gioca`,
+      start_level: `Inizia dal livello`,
+      pause_title: `Gioco in pausa`, resume: `▶ Continua`,
+      help_title: `Come si gioca?`,
+      help1: `I numeri entrano da destra e avanzano verso sinistra.`,
+      help2: `Con − e + metti nel display lo stesso numero del primo a sinistra (quello cerchiato di bianco).`,
+      help3: `Tocca il display giallo per mangiarlo.`,
+      help4: `Se un numero tocca il bordo sinistro perdi una vita (massimo 6).`,
+      help5: `Tocca le sorprese: ❤️ vita, 🐌 più lento, ⚡ più veloce, 💥 numeri mangiati.`,
+      help6: `Da computer: ← → per − e +, ↓ per mangiare, ↑ per prendere una sorpresa.`,
+      ok: `Ho capito`,
+      ios_title: `Installa su iPhone`,
+      ios1: `1. Apri questa pagina in <b>Safari</b>.`,
+      ios2: `2. Tocca il pulsante <b>Condividi</b> (il quadrato con la freccia verso l'alto).`,
+      ios3: `3. Scegli <b>«Aggiungi alla schermata Home»</b>.`,
+      over_title: `Partita finita!`, new_record: `🏆 Nuovo record!`,
+      score: `Punteggio`, level: `Livello`, time: `Tempo`,
+      again: `🔄 Gioca ancora`, share_score: `📤 Condividi il mio punteggio`,
+      life_extra: `Vita extra! ❤️`, slower: `🐌 Più lento`, faster: `⚡ Più veloce`,
+      eaten: `Numeri mangiati! 💥`, level_up: `Livello {n}! 🎉`,
+      share_text_score: `Ho fatto {s} punti a Comenum! Riesci a battermi? 🔢`,
+      share_text: `Prova Comenum, un gioco veloce per mangiare numeri. Quanto resisti? 🔢`,
+      funny: [`Più lento di una lumaca! 🐌`, `Devi allenare di più i pollici! 👍`, `Mia nonna è più veloce! 👵`,
+              `Dormi o cosa? 😴`, `Anche una tartaruga ti batte! 🐢`, `Ti serve più caffè! ☕`,
+              `I numeri ridono di te! 😂`, `Riflessi da bradipo! 🦥`]
+    },
+    pt: {
+      tagline: `Coma os números antes que cheguem à borda.`,
+      record: `Recorde`, play: `▶ Jogar`, share: `📤 Compartilhar com um amigo`,
+      install: `📲 Instalar no celular`, howto: `❓ Como jogar`,
+      start_level: `Começar no nível`,
+      pause_title: `Jogo pausado`, resume: `▶ Continuar`,
+      help_title: `Como jogar?`,
+      help1: `Os números entram pela direita e avançam para a esquerda.`,
+      help2: `Com − e + coloque no visor o mesmo número do primeiro da esquerda (o contornado de branco).`,
+      help3: `Toque no visor amarelo para comê-lo.`,
+      help4: `Se um número tocar a borda esquerda, você perde uma vida (máximo 6).`,
+      help5: `Toque nas surpresas: ❤️ vida, 🐌 mais lento, ⚡ mais rápido, 💥 números comidos.`,
+      help6: `No computador: ← → para − e +, ↓ para comer, ↑ para pegar uma surpresa.`,
+      ok: `Entendi`,
+      ios_title: `Instalar no iPhone`,
+      ios1: `1. Abra esta página no <b>Safari</b>.`,
+      ios2: `2. Toque no botão <b>Compartilhar</b> (o quadrado com a seta para cima).`,
+      ios3: `3. Escolha <b>“Adicionar à Tela de Início”</b>.`,
+      over_title: `Fim de jogo!`, new_record: `🏆 Novo recorde!`,
+      score: `Pontuação`, level: `Nível`, time: `Tempo`,
+      again: `🔄 Jogar de novo`, share_score: `📤 Compartilhar minha pontuação`,
+      life_extra: `Vida extra! ❤️`, slower: `🐌 Mais lento`, faster: `⚡ Mais rápido`,
+      eaten: `Números comidos! 💥`, level_up: `Nível {n}! 🎉`,
+      share_text_score: `Fiz {s} pontos no Comenum! Consegue me superar? 🔢`,
+      share_text: `Experimente o Comenum, um jogo rápido de comer números. Quanto tempo você aguenta? 🔢`,
+      funny: [`Mais lento que uma lesma! 🐌`, `Treine mais esses polegares! 👍`, `Minha avó é mais rápida! 👵`,
+              `Está dormindo? 😴`, `Até uma tartaruga ganha de você! 🐢`, `Você precisa de mais café! ☕`,
+              `Os números estão rindo de você! 😂`, `Reflexos de preguiça! 🦥`]
+    }
+  };
+
+  function detectLang() {
+    const saved = lsGet('comenum_lang');
+    if (saved && I18N[saved]) return saved;
+    const nav = (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+    const code = String(nav).slice(0, 2).toLowerCase();
+    return I18N[code] ? code : 'en';
+  }
+  let lang = detectLang();
+  let T = I18N[lang];
+  function t(key, vars) {
+    let s = T[key];
+    if (s === undefined) s = I18N.en[key] || key;
+    if (vars) for (const k in vars) s = s.replace('{' + k + '}', vars[k]);
+    return s;
+  }
+  function applyLang() {
+    T = I18N[lang];
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+    $('langSel').value = lang;
+  }
+  (function buildLangSelect() {
+    const sel = $('langSel');
+    Object.keys(LANG_NAMES).forEach(code => {
+      const o = document.createElement('option');
+      o.value = code; o.textContent = LANG_NAMES[code];
+      sel.appendChild(o);
+    });
+  })();
+
+  // ---------- Estado ----------
+  let S = newState(1);
+  function newState(lv) {
+    return {
+      playing: false, paused: false, helpPaused: false,
+      score: 0, level: lv, lives: 3, player: 1, time: 0,
+      eaten: 0, goal: 10 + (lv - 1) * 5,
+      numbers: [], dist: SPACING, breath: 0,
+      speedMult: 1, effectLeft: 0, effectKey: '',
+      surprises: [], nextSurprise: 8
+    };
+  }
 
   // ---------- Audio ----------
   let audioCtx = null, master = null, musicTimer = null, step = 0;
@@ -318,19 +551,19 @@
       master.gain.value = 1;
       master.connect(audioCtx.destination);
     }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state !== 'running') { try { audioCtx.resume(); } catch (e) {} }
   }
   function tone(f, d, type = 'sine', v = 0.12, delay = 0, to = null) {
     if (!audioCtx || muted) return;
-    const t = audioCtx.currentTime + delay;
+    const tm = audioCtx.currentTime + delay;
     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.type = type;
-    o.frequency.setValueAtTime(f, t);
-    if (to) o.frequency.exponentialRampToValueAtTime(to, t + d);
-    g.gain.setValueAtTime(v, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + d);
+    o.frequency.setValueAtTime(f, tm);
+    if (to) o.frequency.exponentialRampToValueAtTime(to, tm + d);
+    g.gain.setValueAtTime(v, tm);
+    g.gain.exponentialRampToValueAtTime(0.001, tm + d);
     o.connect(g); g.connect(master);
-    o.start(t); o.stop(t + d + 0.03);
+    o.start(tm); o.stop(tm + d + 0.03);
   }
   const SFX = {
     eat:    () => { tone(660, .09, 'square', .09); tone(990, .12, 'square', .09, .07); },
@@ -373,15 +606,23 @@
     document.body.style.background = `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
   }
   function toast(msg, cls) {
-    const t = $('toast');
-    t.textContent = msg;
-    t.className = cls || '';
-    void t.offsetWidth;
-    t.classList.add('show');
+    const el = $('toast');
+    el.textContent = msg;
+    el.className = cls || '';
+    void el.offsetWidth;
+    el.classList.add('show');
   }
   function open(id) { $(id).classList.add('open'); }
   function close(id) { $(id).classList.remove('open'); }
   function updateSoundIcon() { $('btnSound').textContent = muted ? '🔇' : '🔊'; }
+
+  // Pantalla de inicio: récord y selector de nivel
+  function refreshStart() {
+    startLevel = 1;
+    $('bestStart').textContent = best;
+    $('lvVal').textContent = startLevel;
+    $('levelPick').classList.toggle('hidden', maxLevel <= 1);
+  }
 
   // ---------- Números ----------
   function spawnNumber(overshoot) {
@@ -409,8 +650,9 @@
       S.level++;
       S.eaten = 0;
       S.goal = 10 + (S.level - 1) * 5;
+      if (S.level > maxLevel) { maxLevel = S.level; lsSet('comenum_maxlevel', String(maxLevel)); }
       setBackground();
-      toast('¡Nivel ' + S.level + '! 🎉', 'good');
+      toast(t('level_up', { n: S.level }), 'good');
       sfx('level');
     }
   }
@@ -445,7 +687,8 @@
     S.dist = SPACING;
     S.speedMult = 1; S.effectLeft = 0; $('effect').textContent = '';
     sfx('lose'); vibrate([120, 60, 120]);
-    toast(FUNNY[Math.floor(Math.random() * FUNNY.length)]);
+    const f = T.funny;
+    toast(f[Math.floor(Math.random() * f.length)]);
     hud();
     if (S.lives <= 0) {
       S.playing = false;
@@ -484,21 +727,24 @@
     switch (sup.type) {
       case 'life':
         if (S.lives < MAX_LIVES) S.lives++;
-        toast('¡Vida extra! ❤️', 'good');
+        toast(t('life_extra'), 'good');
         break;
       case 'slow':
-        S.speedMult = 0.5; S.effectLeft = 6; S.effectName = '🐌 Más lento';
+        S.speedMult = 0.5; S.effectLeft = 6; S.effectKey = 'slower';
         break;
       case 'fast':
-        S.speedMult = 1.6; S.effectLeft = 5; S.effectName = '⚡ Más rápido';
+        S.speedMult = 1.6; S.effectLeft = 5; S.effectKey = 'faster';
         break;
       case 'clear':
         for (let k = 0; k < 4 && S.numbers.length; k++) { removeNumber(0); award(); }
         checkLevel();
-        toast('¡Números comidos! 💥', 'good');
+        toast(t('eaten'), 'good');
         break;
     }
     hud();
+  }
+  function grabSurprise() {
+    if (S.surprises.length) activateSurprise(S.surprises[0]);
   }
 
   // ---------- Bucle principal ----------
@@ -517,7 +763,7 @@
     if (S.effectLeft > 0) {
       S.effectLeft -= dt;
       if (S.effectLeft <= 0) { S.speedMult = 1; $('effect').textContent = ''; }
-      else $('effect').textContent = S.effectName + ' ' + Math.ceil(S.effectLeft) + 's';
+      else $('effect').textContent = t(S.effectKey) + ' ' + Math.ceil(S.effectLeft) + 's';
     }
 
     // Movimiento
@@ -562,7 +808,8 @@
     ensureAudio();
     clearNumbers();
     S.surprises.forEach(s => s.el.remove());
-    S = newState();
+    const lv = Math.min(Math.max(1, startLevel), maxLevel);
+    S = newState(lv);
     S.playing = true;
     lastSec = -1;
     $('time').textContent = '00:00';
@@ -576,13 +823,23 @@
     sfx('over');
     const isRecord = S.score > best;
     if (isRecord) { best = S.score; lsSet('comenum_best', String(best)); }
+    if (S.level > maxLevel) maxLevel = S.level;
+    lsSet('comenum_maxlevel', String(maxLevel));
     $('finalScore').textContent = S.score;
     $('finalLevel').textContent = S.level;
     $('finalTime').textContent = fmt(S.time);
     $('finalBest').textContent = best;
     $('newRecord').classList.toggle('hidden', !isRecord);
-    $('bestStart').textContent = best;
     open('ovOver');
+  }
+  function playAgain() {
+    close('ovOver');
+    refreshStart();
+    if (maxLevel > 1) {
+      open('ovStart');   // permite elegir el nivel de inicio
+    } else {
+      startGame();
+    }
   }
   function pauseGame() {
     if (!S.playing || S.paused) return;
@@ -590,6 +847,7 @@
     open('ovPause');
   }
   function resumeGame() {
+    ensureAudio();
     close('ovPause');
     S.paused = false;
   }
@@ -605,9 +863,7 @@
   // ---------- Compartir ----------
   async function share(score) {
     const url = location.href.split('#')[0];
-    const text = score > 0
-      ? '¡He conseguido ' + score + ' puntos en Comenum! ¿Puedes superarme? 🔢'
-      : 'Prueba Comenum, un juego rápido para comer números. ¿Cuántos aguantas? 🔢';
+    const text = score > 0 ? t('share_text_score', { s: score }) : t('share_text');
     if (navigator.share) {
       try { await navigator.share({ title: 'Comenum', text, url }); } catch (e) {}
     } else {
@@ -646,7 +902,17 @@
   press($('display'), eat);
 
   $('btnPlay').addEventListener('click', startGame);
-  $('btnAgain').addEventListener('click', startGame);
+  $('btnAgain').addEventListener('click', playAgain);
+  $('lvMinus').addEventListener('click', () => {
+    startLevel = Math.max(1, startLevel - 1);
+    $('lvVal').textContent = startLevel;
+    ensureAudio(); sfx('button');
+  });
+  $('lvPlus').addEventListener('click', () => {
+    startLevel = Math.min(maxLevel, startLevel + 1);
+    $('lvVal').textContent = startLevel;
+    ensureAudio(); sfx('button');
+  });
   $('btnPause').addEventListener('click', () => { sfx('button'); vibrate(20); pauseGame(); });
   $('btnResume').addEventListener('click', () => { sfx('button'); resumeGame(); });
   $('btnHelp').addEventListener('click', () => { sfx('button'); openHelp(); });
@@ -662,19 +928,52 @@
     updateSoundIcon();
     if (!muted) sfx('button');
   });
-
-  document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowUp' || e.key === '+') change(1);
-    else if (e.key === 'ArrowDown' || e.key === '-') change(-1);
-    else if (e.key === ' ' || e.key === 'Enter') { if (S.playing) { e.preventDefault(); eat(); } }
-    else if (e.key === 'p' || e.key === 'P') { S.paused ? resumeGame() : pauseGame(); }
+  $('langSel').addEventListener('change', e => {
+    lang = e.target.value;
+    lsSet('comenum_lang', lang);
+    applyLang();
   });
+
+  // Pausa automática: llamadas, cambio de app, bloqueo de pantalla, avisos flotantes
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
+  window.addEventListener('pagehide', pauseGame);
+  window.addEventListener('blur', pauseGame);
+
+  // Teclado (ordenador): ← − | → + | ↓ comer | ↑ coger sorpresa | P pausa
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    if (k === 'p' || k === 'P') {
+      if (S.playing) {
+        if (S.paused) { if (!S.helpPaused) resumeGame(); }
+        else pauseGame();
+      }
+      return;
+    }
+    if (!S.playing || S.paused) return;
+    switch (k) {
+      case 'ArrowLeft':  change(-1); break;
+      case 'ArrowRight': change(1); break;
+      case 'ArrowDown':
+      case ' ':
+      case 'Enter':
+        if (!e.repeat) eat();
+        break;
+      case 'ArrowUp':
+        if (!e.repeat) grabSurprise();
+        break;
+      default: return;
+    }
+    e.preventDefault();
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  });
+
   // Evitar zoom con gestos en iOS
   document.addEventListener('gesturestart', e => e.preventDefault());
 
   // ---------- Arranque ----------
-  $('bestStart').textContent = best;
+  applyLang();
+  refreshStart();
   updateSoundIcon();
   hud();
   requestAnimationFrame(loop);
