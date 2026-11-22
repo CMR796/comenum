@@ -14,6 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="Comenum">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
+  :root { --n1: #ff7b54; --n2: #ffb347; }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
   body {
@@ -51,15 +52,28 @@
   .ib:active { transform: scale(.92); }
 
   /* Puntuación */
-  #scoreWrap { text-align: center; padding: 10px 0 6px; }
+  #scoreWrap { text-align: center; padding: 8px 0 4px; }
   #scoreWrap .lbl { font-size: 13px; opacity: .85; letter-spacing: 1px; text-transform: uppercase; }
   #score { font-size: 54px; font-weight: 900; color: #ffd23f; text-shadow: 0 3px 8px rgba(0,0,0,.35); line-height: 1.05; }
   #prog { width: 55%; height: 7px; margin: 6px auto 0; background: rgba(255,255,255,.25); border-radius: 4px; overflow: hidden; }
   #progBar { display: block; height: 100%; width: 0; background: #7dffb0; transition: width .2s; }
 
+  /* Combo */
+  #combo {
+    height: 26px; margin-top: 4px; font-size: 19px; font-weight: 900; letter-spacing: .5px;
+    color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.45); opacity: 0; transition: opacity .2s;
+  }
+  #combo.on { opacity: 1; }
+  #combo[data-m="2"] { color: #ffe66d; }
+  #combo[data-m="3"] { color: #ffb347; }
+  #combo[data-m="4"] { color: #ff7b54; }
+  #combo[data-m="5"] { color: #ff4d6d; }
+  #combo.pulse { animation: comboPulse .4s; }
+  @keyframes comboPulse { 50% { transform: scale(1.35); } }
+
   /* Franja de números */
   #strip {
-    position: relative; height: 60px; margin: 8px 10px 0;
+    position: relative; height: 60px; margin: 6px 10px 0;
     background: rgba(255,255,255,.16);
     border: 2px solid rgba(255,255,255,.28);
     border-radius: 14px; overflow: hidden;
@@ -72,11 +86,25 @@
     position: absolute; left: 0; top: 8px; width: 40px; height: 40px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 21px; font-weight: 800; color: #fff;
-    background: linear-gradient(135deg, #ff7b54, #ffb347);
+    text-shadow: 0 1px 2px rgba(0,0,0,.35);
+    background: linear-gradient(135deg, var(--n1), var(--n2));
     box-shadow: 0 3px 8px rgba(0,0,0,.25);
     will-change: transform;
   }
+  .num.gold {
+    background: linear-gradient(135deg, #fff176, #ffb300); color: #5a3a00; text-shadow: none;
+    box-shadow: 0 0 12px rgba(255,215,0,.9), 0 3px 8px rgba(0,0,0,.25);
+  }
+  .num.gold::after {
+    content: "★"; position: absolute; top: -6px; right: -3px; font-size: 15px; color: #fff;
+    text-shadow: 0 0 4px #ff9800, 0 0 2px #000;
+  }
+  .num.wild {
+    background: conic-gradient(#ff5e62, #ffd200, #43e97b, #4facfe, #a18cd1, #ff5e62);
+    font-size: 24px;
+  }
   .num.first { box-shadow: 0 0 0 3px #fff, 0 0 14px rgba(255,255,255,.9); }
+  .num.gold.first { box-shadow: 0 0 0 3px #fff, 0 0 16px rgba(255,215,0,.95); }
 
   /* Zona de juego (sorpresas) */
   #area { position: relative; flex: 1; }
@@ -93,6 +121,17 @@
     cursor: pointer;
   }
   @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  .pts {
+    position: absolute; left: 50%; bottom: 6px; pointer-events: none;
+    font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.5);
+    animation: ptsUp .9s ease-out forwards;
+  }
+  .pts.gold { color: #ffe14d; font-size: 28px; }
+  @keyframes ptsUp {
+    0%   { opacity: 0; transform: translate(-50%, 10px) scale(.7); }
+    20%  { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
+    100% { opacity: 0; transform: translate(-50%, -42px) scale(1); }
+  }
 
   /* Controles */
   .controls {
@@ -144,6 +183,19 @@
     80% { opacity: 1; }
     100% { opacity: 0; }
   }
+  #achToast {
+    position: absolute; left: 50%; top: 58px; z-index: 60; pointer-events: none;
+    transform: translateX(-50%); opacity: 0; max-width: 92%; text-align: center;
+    padding: 10px 16px; border-radius: 16px; font-size: 14px; font-weight: 800; color: #3d2b00;
+    background: linear-gradient(135deg, #ffe259, #ffa751); box-shadow: 0 8px 22px rgba(0,0,0,.35);
+  }
+  #achToast.show { animation: achAnim 3s forwards; }
+  @keyframes achAnim {
+    0%   { opacity: 0; transform: translate(-50%, -14px); }
+    10%  { opacity: 1; transform: translate(-50%, 0); }
+    85%  { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, 0); }
+  }
 
   /* Ventanas */
   .overlay {
@@ -162,6 +214,7 @@
   .card h3 { font-size: 22px; margin-bottom: 10px; color: #5b3ea8; }
   .card p { margin: 6px 0; font-size: 15px; line-height: 1.4; }
   .card ul { text-align: left; margin: 8px 0 4px 20px; font-size: 14px; line-height: 1.5; }
+  .card li { margin-bottom: 4px; }
   .big { font-size: 34px; font-weight: 900; color: #e6a100; }
   .btn {
     display: block; width: 100%; margin-top: 10px; padding: 12px; border: none; border-radius: 14px;
@@ -189,6 +242,22 @@
     margin-top: 12px; padding: 7px 10px; border-radius: 10px; border: 1px solid #ccc;
     font-size: 14px; background: #fff; color: #2b2150;
   }
+
+  /* Logros y temas */
+  .row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin-top: 7px;
+    border-radius: 12px; background: #f1eefb; font-size: 14px; text-align: left;
+  }
+  .row .sw { width: 30px; height: 30px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 2px rgba(0,0,0,.12); }
+  .row .ic { width: 30px; font-size: 22px; text-align: center; flex: none; }
+  .row .tx { flex: 1; line-height: 1.25; font-weight: 700; }
+  .row .tx small { display: block; font-weight: 400; opacity: .75; font-size: 12px; }
+  .row .st { font-size: 13px; font-weight: 800; color: #5b3ea8; flex: none; }
+  .row.can { cursor: pointer; }
+  .row.lock { opacity: .6; }
+  .row.sel { outline: 3px solid #5b3ea8; }
+  .row.done { background: #e4f7ea; }
+  .cnt { font-size: 13px; opacity: .75; margin-bottom: 2px; }
 </style>
 </head>
 <body>
@@ -208,6 +277,7 @@
     <div class="lbl" data-i18n="score"></div>
     <div id="score">0</div>
     <div id="prog"><i id="progBar"></i></div>
+    <div id="combo"></div>
   </div>
 
   <div id="strip"></div>
@@ -221,6 +291,7 @@
   </div>
 
   <div id="toast"></div>
+  <div id="achToast"></div>
 
   <!-- Inicio -->
   <div class="overlay open" id="ovStart">
@@ -238,6 +309,7 @@
       </div>
       <button class="btn" id="btnPlay" data-i18n="play"></button>
       <button class="btn green" id="btnShareStart" data-i18n="share"></button>
+      <button class="btn ghost" id="btnAch" data-i18n="ach_btn"></button>
       <button class="btn ghost" id="btnInstall" data-i18n="install"></button>
       <button class="btn ghost" id="btnHowTo" data-i18n="howto"></button>
       <select id="langSel" aria-label="Language"></select>
@@ -262,6 +334,8 @@
         <li data-i18n="help3"></li>
         <li data-i18n="help4"></li>
         <li data-i18n="help5"></li>
+        <li data-i18n="help7"></li>
+        <li data-i18n="help8"></li>
         <li data-i18n="help6"></li>
       </ul>
       <button class="btn" id="btnHelpClose" data-i18n="ok"></button>
@@ -286,9 +360,21 @@
       <p id="newRecord" class="hidden"><b data-i18n="new_record"></b></p>
       <p><span data-i18n="score"></span>: <span class="big" id="finalScore">0</span></p>
       <p><span data-i18n="level"></span>: <b id="finalLevel">1</b> · <span data-i18n="time"></span>: <b id="finalTime">00:00</b></p>
-      <p><span data-i18n="record"></span>: <b id="finalBest">0</b></p>
+      <p><span data-i18n="streak_best"></span>: <b id="finalStreak">0</b> · <span data-i18n="record"></span>: <b id="finalBest">0</b></p>
       <button class="btn" id="btnAgain" data-i18n="again"></button>
       <button class="btn green" id="btnShareOver" data-i18n="share_score"></button>
+    </div>
+  </div>
+
+  <!-- Logros y temas -->
+  <div class="overlay" id="ovAch">
+    <div class="card">
+      <h3 data-i18n="themes_title"></h3>
+      <div id="themeList"></div>
+      <h3 data-i18n="ach_list_title" style="margin-top:18px"></h3>
+      <p class="cnt" id="achCount"></p>
+      <div id="achList"></div>
+      <button class="btn" id="btnAchClose" data-i18n="close"></button>
     </div>
   </div>
 </div>
@@ -303,19 +389,69 @@
   const SPACING = 45;        // distancia entre números (px) -> 1,8 s a velocidad inicial
   const BASE_SPEED = 25;     // px/segundo en el nivel 1
   const MAX_LIVES = 6;
-  const BACKGROUNDS = [
-    ['#667eea', '#764ba2'], ['#f093fb', '#f5576c'], ['#4facfe', '#00a8c8'],
-    ['#43e97b', '#1ba39c'], ['#fa709a', '#e8a317'], ['#5f72bd', '#9b23ea'],
-    ['#ff9a56', '#e0455a'], ['#2193b0', '#6dd5ed']
+  const COMBO_STEP = 5;      // cada cuántos números seguidos sube el multiplicador
+  const MAX_MULT = 5;        // multiplicador máximo
+  const P_WILD = 0.06;       // probabilidad de comodín
+  const P_GOLD = 0.09;       // probabilidad de número dorado
+
+  // ---------- Logros ----------
+  // type: eat (números comidos), streak (racha), level, score, gold, wild, games
+  const ACHS = [
+    { id: 'eat100',    type: 'eat',    n: 100,   icon: '🍽️' },
+    { id: 'eat500',    type: 'eat',    n: 500,   icon: '🍔' },
+    { id: 'eat2000',   type: 'eat',    n: 2000,  icon: '🦖' },
+    { id: 'streak10',  type: 'streak', n: 10,    icon: '🔥' },
+    { id: 'streak25',  type: 'streak', n: 25,    icon: '⚡' },
+    { id: 'streak50',  type: 'streak', n: 50,    icon: '🚀' },
+    { id: 'level5',    type: 'level',  n: 5,     icon: '🌱' },
+    { id: 'level10',   type: 'level',  n: 10,    icon: '🌳' },
+    { id: 'level20',   type: 'level',  n: 20,    icon: '🏔️' },
+    { id: 'score1000', type: 'score',  n: 1000,  icon: '🥉' },
+    { id: 'score5000', type: 'score',  n: 5000,  icon: '🥈' },
+    { id: 'score20000',type: 'score',  n: 20000, icon: '🥇' },
+    { id: 'gold10',    type: 'gold',   n: 10,    icon: '⭐' },
+    { id: 'wild10',    type: 'wild',   n: 10,    icon: '🃏' },
+    { id: 'games10',   type: 'games',  n: 10,    icon: '🎮' }
+  ];
+
+  // ---------- Temas de color ----------
+  const THEMES = [
+    { id: 'classic', req: null, num: ['#ff7b54', '#ffb347'],
+      pal: [['#667eea', '#764ba2'], ['#f093fb', '#f5576c'], ['#4facfe', '#00a8c8'], ['#43e97b', '#1ba39c'],
+            ['#fa709a', '#e8a317'], ['#5f72bd', '#9b23ea'], ['#ff9a56', '#e0455a'], ['#2193b0', '#6dd5ed']] },
+    { id: 'ocean', req: 'eat100', num: ['#ff9a8b', '#ff6a88'],
+      pal: [['#2193b0', '#6dd5ed'], ['#0575e6', '#021b79'], ['#00c6ff', '#0072ff'], ['#1cb5e0', '#000046']] },
+    { id: 'sunset', req: 'streak10', num: ['#ffe259', '#ffa751'],
+      pal: [['#ff512f', '#dd2476'], ['#f12711', '#f5af19'], ['#ee0979', '#ff6a00'], ['#8e2de2', '#ff5e62']] },
+    { id: 'forest', req: 'level5', num: ['#f9d423', '#ff8c00'],
+      pal: [['#134e5e', '#71b280'], ['#2e8b2e', '#7bc043'], ['#0b6e4f', '#08312a'], ['#093028', '#237a57']] },
+    { id: 'candy', req: 'gold10', num: ['#6a11cb', '#2575fc'],
+      pal: [['#ff9a9e', '#d96c9b'], ['#a18cd1', '#e68fc0'], ['#e79ad4', '#7b9fe0'], ['#ff758c', '#ff7eb3']] },
+    { id: 'night', req: 'score5000', num: ['#43e97b', '#1ba39c'],
+      pal: [['#0f2027', '#2c5364'], ['#232526', '#414345'], ['#1a1a2e', '#16213e'], ['#141e30', '#243b55']] },
+    { id: 'neon', req: 'streak25', num: ['#00f260', '#0575e6'],
+      pal: [['#0f0c29', '#302b63'], ['#000000', '#434343'], ['#200122', '#6f0000'], ['#0f0c29', '#24243e']] },
+    { id: 'gold', req: 'level10', num: ['#f9d423', '#e65c00'],
+      pal: [['#232526', '#b8860b'], ['#3a1c71', '#d76d77'], ['#7a4b00', '#f7971e'], ['#42275a', '#734b6d']] }
   ];
 
   // ---------- Guardado local ----------
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function jsonGet(k, d) { try { const v = JSON.parse(lsGet(k)); return v == null ? d : v; } catch (e) { return d; } }
+
   let best = parseInt(lsGet('comenum_best')) || 0;
   let maxLevel = Math.max(1, parseInt(lsGet('comenum_maxlevel')) || 1);
   let muted = lsGet('comenum_mute') === '1';
   let startLevel = 1;
+  let stats = Object.assign({ eaten: 0, games: 0, gold: 0, wild: 0, streak: 0 }, jsonGet('comenum_stats', {}));
+  const unlocked = new Set((() => { const a = jsonGet('comenum_ach', []); return Array.isArray(a) ? a : []; })());
+  let themeId = lsGet('comenum_theme') || 'classic';
+
+  const achById = id => ACHS.find(a => a.id === id);
+  const themeUnlocked = th => !th.req || unlocked.has(th.req);
+  const curTheme = () => THEMES.find(x => x.id === themeId) || THEMES[0];
+  if (!themeUnlocked(curTheme())) themeId = 'classic';
 
   // ---------- Idiomas ----------
   const LANG_NAMES = { es: 'Español', en: 'English', fr: 'Français', de: 'Deutsch', it: 'Italiano', pt: 'Português' };
@@ -333,18 +469,25 @@
       help4: `Si un número toca el borde izquierdo pierdes una vida (máximo 6).`,
       help5: `Toca las sorpresas: ❤️ vida, 🐌 más lento, ⚡ más rápido, 💥 se comen números.`,
       help6: `En ordenador: ← → para − y +, ↓ para comer, ↑ para coger una sorpresa.`,
-      ok: `Entendido`,
+      help7: `Rachas: cada 5 números seguidos sin fallar sube el multiplicador (hasta ×5). Un fallo, o perder una vida, lo reinicia.`,
+      help8: `Número dorado ⭐ = puntos ×3. Número «?» = comodín: se come con cualquier número.`,
+      ok: `Entendido`, close: `Cerrar`,
       ios_title: `Instalar en iPhone`,
       ios1: `1. Abre esta página en <b>Safari</b>.`,
       ios2: `2. Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba).`,
       ios3: `3. Elige <b>«Añadir a pantalla de inicio»</b>.`,
       over_title: `¡Juego terminado!`, new_record: `🏆 ¡Nuevo récord!`,
-      score: `Puntuación`, level: `Nivel`, time: `Tiempo`,
+      score: `Puntuación`, level: `Nivel`, time: `Tiempo`, streak_best: `Mejor racha`,
       again: `🔄 Jugar de nuevo`, share_score: `📤 Compartir mi puntuación`,
       life_extra: `¡Vida extra! ❤️`, slower: `🐌 Más lento`, faster: `⚡ Más rápido`,
       eaten: `¡Números comidos! 💥`, level_up: `¡Nivel {n}! 🎉`,
       share_text_score: `¡He conseguido {s} puntos en Comenum! ¿Puedes superarme? 🔢`,
       share_text: `Prueba Comenum, un juego rápido para comer números. ¿Cuántos aguantas? 🔢`,
+      ach_btn: `🏆 Logros y temas`, themes_title: `Temas de color`, ach_list_title: `Logros`, theme_active: `En uso`,
+      ach_eat: `Come {n} números`, ach_streak: `Racha de {n} seguidos`, ach_level: `Llega al nivel {n}`,
+      ach_score: `Consigue {n} puntos`, ach_gold: `Come {n} números dorados`, ach_wild: `Come {n} comodines`,
+      ach_games: `Juega {n} partidas`,
+      themes: { classic: `Clásico`, ocean: `Océano`, sunset: `Atardecer`, forest: `Bosque`, candy: `Caramelo`, night: `Noche`, neon: `Neón`, gold: `Dorado` },
       funny: [`¡Eres más lento que un caracol! 🐌`, `¡Debes entrenar más los pulgares! 👍`, `¡Mi abuela es más rápida! 👵`,
               `¿Estás dormido o qué? 😴`, `¡Hasta una tortuga te gana! 🐢`, `¡Necesitas más café! ☕`,
               `¡Los números se ríen de ti! 😂`, `¡Reflejos de perezoso! 🦥`, `¡Houston, tenemos un problema! 🚀`,
@@ -363,18 +506,25 @@
       help4: `If a number touches the left edge you lose a life (maximum 6).`,
       help5: `Tap the surprises: ❤️ life, 🐌 slower, ⚡ faster, 💥 numbers eaten.`,
       help6: `On a computer: ← → for − and +, ↓ to eat, ↑ to grab a surprise.`,
-      ok: `Got it`,
+      help7: `Streaks: every 5 numbers in a row without a mistake raises the multiplier (up to ×5). A mistake, or losing a life, resets it.`,
+      help8: `Golden number ⭐ = triple points. Number “?” = wildcard: it can be eaten with any number.`,
+      ok: `Got it`, close: `Close`,
       ios_title: `Install on iPhone`,
       ios1: `1. Open this page in <b>Safari</b>.`,
       ios2: `2. Tap the <b>Share</b> button (the square with an arrow pointing up).`,
       ios3: `3. Choose <b>“Add to Home Screen”</b>.`,
       over_title: `Game over!`, new_record: `🏆 New record!`,
-      score: `Score`, level: `Level`, time: `Time`,
+      score: `Score`, level: `Level`, time: `Time`, streak_best: `Best streak`,
       again: `🔄 Play again`, share_score: `📤 Share my score`,
       life_extra: `Extra life! ❤️`, slower: `🐌 Slower`, faster: `⚡ Faster`,
       eaten: `Numbers eaten! 💥`, level_up: `Level {n}! 🎉`,
       share_text_score: `I scored {s} points in Comenum! Can you beat me? 🔢`,
       share_text: `Try Comenum, a fast game about eating numbers. How long can you last? 🔢`,
+      ach_btn: `🏆 Achievements & themes`, themes_title: `Color themes`, ach_list_title: `Achievements`, theme_active: `In use`,
+      ach_eat: `Eat {n} numbers`, ach_streak: `Streak of {n} in a row`, ach_level: `Reach level {n}`,
+      ach_score: `Score {n} points`, ach_gold: `Eat {n} golden numbers`, ach_wild: `Eat {n} wildcards`,
+      ach_games: `Play {n} games`,
+      themes: { classic: `Classic`, ocean: `Ocean`, sunset: `Sunset`, forest: `Forest`, candy: `Candy`, night: `Night`, neon: `Neon`, gold: `Gold` },
       funny: [`Slower than a snail! 🐌`, `Time to train those thumbs! 👍`, `My grandma is faster! 👵`,
               `Are you asleep? 😴`, `Even a turtle beats you! 🐢`, `You need more coffee! ☕`,
               `The numbers are laughing at you! 😂`, `Sloth reflexes! 🦥`]
@@ -392,18 +542,25 @@
       help4: `Si un nombre touche le bord gauche, tu perds une vie (maximum 6).`,
       help5: `Touche les surprises : ❤️ vie, 🐌 plus lent, ⚡ plus rapide, 💥 nombres mangés.`,
       help6: `Sur ordinateur : ← → pour − et +, ↓ pour manger, ↑ pour attraper une surprise.`,
-      ok: `Compris`,
+      help7: `Séries : tous les 5 nombres de suite sans erreur, le multiplicateur augmente (jusqu'à ×5). Une erreur, ou perdre une vie, le remet à zéro.`,
+      help8: `Nombre doré ⭐ = points ×3. Nombre « ? » = joker : on peut le manger avec n'importe quel nombre.`,
+      ok: `Compris`, close: `Fermer`,
       ios_title: `Installer sur iPhone`,
       ios1: `1. Ouvre cette page dans <b>Safari</b>.`,
       ios2: `2. Appuie sur le bouton <b>Partager</b> (le carré avec une flèche vers le haut).`,
       ios3: `3. Choisis <b>« Sur l'écran d'accueil »</b>.`,
       over_title: `Partie terminée !`, new_record: `🏆 Nouveau record !`,
-      score: `Score`, level: `Niveau`, time: `Temps`,
+      score: `Score`, level: `Niveau`, time: `Temps`, streak_best: `Meilleure série`,
       again: `🔄 Rejouer`, share_score: `📤 Partager mon score`,
       life_extra: `Vie en plus ! ❤️`, slower: `🐌 Plus lent`, faster: `⚡ Plus rapide`,
       eaten: `Nombres mangés ! 💥`, level_up: `Niveau {n} ! 🎉`,
       share_text_score: `J'ai marqué {s} points à Comenum ! Peux-tu me battre ? 🔢`,
       share_text: `Essaie Comenum, un jeu rapide pour manger des nombres. Combien de temps tiens-tu ? 🔢`,
+      ach_btn: `🏆 Succès et thèmes`, themes_title: `Thèmes de couleur`, ach_list_title: `Succès`, theme_active: `Utilisé`,
+      ach_eat: `Mange {n} nombres`, ach_streak: `Série de {n} d'affilée`, ach_level: `Atteins le niveau {n}`,
+      ach_score: `Marque {n} points`, ach_gold: `Mange {n} nombres dorés`, ach_wild: `Mange {n} jokers`,
+      ach_games: `Joue {n} parties`,
+      themes: { classic: `Classique`, ocean: `Océan`, sunset: `Crépuscule`, forest: `Forêt`, candy: `Bonbon`, night: `Nuit`, neon: `Néon`, gold: `Or` },
       funny: [`Plus lent qu'un escargot ! 🐌`, `Entraîne un peu plus tes pouces ! 👍`, `Ma grand-mère est plus rapide ! 👵`,
               `Tu dors ou quoi ? 😴`, `Même une tortue te bat ! 🐢`, `Il te faut plus de café ! ☕`,
               `Les nombres se moquent de toi ! 😂`, `Des réflexes de paresseux ! 🦥`]
@@ -421,18 +578,25 @@
       help4: `Berührt eine Zahl den linken Rand, verlierst du ein Leben (maximal 6).`,
       help5: `Tippe auf die Überraschungen: ❤️ Leben, 🐌 langsamer, ⚡ schneller, 💥 Zahlen gegessen.`,
       help6: `Am Computer: ← → für − und +, ↓ zum Essen, ↑ für eine Überraschung.`,
-      ok: `Verstanden`,
+      help7: `Serien: Alle 5 Zahlen in Folge ohne Fehler steigt der Multiplikator (bis ×5). Ein Fehler oder ein verlorenes Leben setzt ihn zurück.`,
+      help8: `Goldene Zahl ⭐ = dreifache Punkte. Zahl „?“ = Joker: Sie kann mit jeder Zahl gegessen werden.`,
+      ok: `Verstanden`, close: `Schließen`,
       ios_title: `Auf dem iPhone installieren`,
       ios1: `1. Öffne diese Seite in <b>Safari</b>.`,
       ios2: `2. Tippe auf <b>Teilen</b> (das Quadrat mit dem Pfeil nach oben).`,
       ios3: `3. Wähle <b>„Zum Home-Bildschirm“</b>.`,
       over_title: `Spiel vorbei!`, new_record: `🏆 Neuer Rekord!`,
-      score: `Punkte`, level: `Level`, time: `Zeit`,
+      score: `Punkte`, level: `Level`, time: `Zeit`, streak_best: `Beste Serie`,
       again: `🔄 Nochmal spielen`, share_score: `📤 Meine Punktzahl teilen`,
       life_extra: `Extraleben! ❤️`, slower: `🐌 Langsamer`, faster: `⚡ Schneller`,
       eaten: `Zahlen gegessen! 💥`, level_up: `Level {n}! 🎉`,
       share_text_score: `Ich habe {s} Punkte in Comenum erreicht! Kannst du mich schlagen? 🔢`,
       share_text: `Probier Comenum aus, ein schnelles Spiel zum Zahlenessen. Wie lange hältst du durch? 🔢`,
+      ach_btn: `🏆 Erfolge & Themen`, themes_title: `Farbthemen`, ach_list_title: `Erfolge`, theme_active: `Aktiv`,
+      ach_eat: `Iss {n} Zahlen`, ach_streak: `{n} in Folge`, ach_level: `Erreiche Level {n}`,
+      ach_score: `Erreiche {n} Punkte`, ach_gold: `Iss {n} goldene Zahlen`, ach_wild: `Iss {n} Joker`,
+      ach_games: `Spiele {n} Partien`,
+      themes: { classic: `Klassisch`, ocean: `Ozean`, sunset: `Sonnenuntergang`, forest: `Wald`, candy: `Bonbon`, night: `Nacht`, neon: `Neon`, gold: `Gold` },
       funny: [`Langsamer als eine Schnecke! 🐌`, `Trainiere mehr deine Daumen! 👍`, `Meine Oma ist schneller! 👵`,
               `Schläfst du? 😴`, `Sogar eine Schildkröte schlägt dich! 🐢`, `Du brauchst mehr Kaffee! ☕`,
               `Die Zahlen lachen dich aus! 😂`, `Faultier-Reflexe! 🦥`]
@@ -450,18 +614,25 @@
       help4: `Se un numero tocca il bordo sinistro perdi una vita (massimo 6).`,
       help5: `Tocca le sorprese: ❤️ vita, 🐌 più lento, ⚡ più veloce, 💥 numeri mangiati.`,
       help6: `Da computer: ← → per − e +, ↓ per mangiare, ↑ per prendere una sorpresa.`,
-      ok: `Ho capito`,
+      help7: `Serie: ogni 5 numeri di fila senza errori sale il moltiplicatore (fino a ×5). Un errore, o perdere una vita, lo azzera.`,
+      help8: `Numero dorato ⭐ = punti ×3. Numero «?» = jolly: si può mangiare con qualsiasi numero.`,
+      ok: `Ho capito`, close: `Chiudi`,
       ios_title: `Installa su iPhone`,
       ios1: `1. Apri questa pagina in <b>Safari</b>.`,
       ios2: `2. Tocca il pulsante <b>Condividi</b> (il quadrato con la freccia verso l'alto).`,
       ios3: `3. Scegli <b>«Aggiungi alla schermata Home»</b>.`,
       over_title: `Partita finita!`, new_record: `🏆 Nuovo record!`,
-      score: `Punteggio`, level: `Livello`, time: `Tempo`,
+      score: `Punteggio`, level: `Livello`, time: `Tempo`, streak_best: `Serie migliore`,
       again: `🔄 Gioca ancora`, share_score: `📤 Condividi il mio punteggio`,
       life_extra: `Vita extra! ❤️`, slower: `🐌 Più lento`, faster: `⚡ Più veloce`,
       eaten: `Numeri mangiati! 💥`, level_up: `Livello {n}! 🎉`,
       share_text_score: `Ho fatto {s} punti a Comenum! Riesci a battermi? 🔢`,
       share_text: `Prova Comenum, un gioco veloce per mangiare numeri. Quanto resisti? 🔢`,
+      ach_btn: `🏆 Traguardi e temi`, themes_title: `Temi di colore`, ach_list_title: `Traguardi`, theme_active: `In uso`,
+      ach_eat: `Mangia {n} numeri`, ach_streak: `Serie di {n} di fila`, ach_level: `Raggiungi il livello {n}`,
+      ach_score: `Fai {n} punti`, ach_gold: `Mangia {n} numeri dorati`, ach_wild: `Mangia {n} jolly`,
+      ach_games: `Gioca {n} partite`,
+      themes: { classic: `Classico`, ocean: `Oceano`, sunset: `Tramonto`, forest: `Foresta`, candy: `Caramella`, night: `Notte`, neon: `Neon`, gold: `Oro` },
       funny: [`Più lento di una lumaca! 🐌`, `Devi allenare di più i pollici! 👍`, `Mia nonna è più veloce! 👵`,
               `Dormi o cosa? 😴`, `Anche una tartaruga ti batte! 🐢`, `Ti serve più caffè! ☕`,
               `I numeri ridono di te! 😂`, `Riflessi da bradipo! 🦥`]
@@ -479,18 +650,25 @@
       help4: `Se um número tocar a borda esquerda, você perde uma vida (máximo 6).`,
       help5: `Toque nas surpresas: ❤️ vida, 🐌 mais lento, ⚡ mais rápido, 💥 números comidos.`,
       help6: `No computador: ← → para − e +, ↓ para comer, ↑ para pegar uma surpresa.`,
-      ok: `Entendi`,
+      help7: `Sequências: a cada 5 números seguidos sem errar, o multiplicador sobe (até ×5). Um erro, ou perder uma vida, zera tudo.`,
+      help8: `Número dourado ⭐ = pontos ×3. Número «?» = curinga: pode ser comido com qualquer número.`,
+      ok: `Entendi`, close: `Fechar`,
       ios_title: `Instalar no iPhone`,
       ios1: `1. Abra esta página no <b>Safari</b>.`,
       ios2: `2. Toque no botão <b>Compartilhar</b> (o quadrado com a seta para cima).`,
       ios3: `3. Escolha <b>“Adicionar à Tela de Início”</b>.`,
       over_title: `Fim de jogo!`, new_record: `🏆 Novo recorde!`,
-      score: `Pontuação`, level: `Nível`, time: `Tempo`,
+      score: `Pontuação`, level: `Nível`, time: `Tempo`, streak_best: `Melhor sequência`,
       again: `🔄 Jogar de novo`, share_score: `📤 Compartilhar minha pontuação`,
       life_extra: `Vida extra! ❤️`, slower: `🐌 Mais lento`, faster: `⚡ Mais rápido`,
       eaten: `Números comidos! 💥`, level_up: `Nível {n}! 🎉`,
       share_text_score: `Fiz {s} pontos no Comenum! Consegue me superar? 🔢`,
       share_text: `Experimente o Comenum, um jogo rápido de comer números. Quanto tempo você aguenta? 🔢`,
+      ach_btn: `🏆 Conquistas e temas`, themes_title: `Temas de cor`, ach_list_title: `Conquistas`, theme_active: `Em uso`,
+      ach_eat: `Coma {n} números`, ach_streak: `Sequência de {n} seguidos`, ach_level: `Chegue ao nível {n}`,
+      ach_score: `Faça {n} pontos`, ach_gold: `Coma {n} números dourados`, ach_wild: `Coma {n} curingas`,
+      ach_games: `Jogue {n} partidas`,
+      themes: { classic: `Clássico`, ocean: `Oceano`, sunset: `Pôr do sol`, forest: `Floresta`, candy: `Doce`, night: `Noite`, neon: `Neon`, gold: `Ouro` },
       funny: [`Mais lento que uma lesma! 🐌`, `Treine mais esses polegares! 👍`, `Minha avó é mais rápida! 👵`,
               `Está dormindo? 😴`, `Até uma tartaruga ganha de você! 🐢`, `Você precisa de mais café! ☕`,
               `Os números estão rindo de você! 😂`, `Reflexos de preguiça! 🦥`]
@@ -534,6 +712,7 @@
       playing: false, paused: false, helpPaused: false,
       score: 0, level: lv, lives: 3, player: 1, time: 0,
       eaten: 0, goal: 10 + (lv - 1) * 5,
+      streak: 0, bestStreak: 0,
       numbers: [], dist: SPACING, breath: 0,
       speedMult: 1, effectLeft: 0, effectKey: '',
       surprises: [], nextSurprise: 8
@@ -567,6 +746,9 @@
   }
   const SFX = {
     eat:    () => { tone(660, .09, 'square', .09); tone(990, .12, 'square', .09, .07); },
+    gold:   () => { tone(1047, .1, 'triangle', .13); tone(1319, .1, 'triangle', .13, .08); tone(1568, .18, 'triangle', .13, .16); },
+    combo:  () => { tone(784, .08, 'triangle', .12, .12); tone(1175, .16, 'triangle', .12, .2); },
+    ach:    () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, .16, 'triangle', .13, .15 + i * .09)),
     button: () => tone(520, .05, 'triangle', .12),
     wrong:  () => tone(160, .18, 'sawtooth', .09),
     lose:   () => { tone(400, .5, 'sawtooth', .12, 0, 90); },
@@ -594,16 +776,38 @@
 
   // ---------- Interfaz ----------
   const fmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  function mult() { return Math.min(MAX_MULT, 1 + Math.floor(S.streak / COMBO_STEP)); }
+  function updateCombo(pulse) {
+    const el = $('combo');
+    if (S.streak >= 2) {
+      el.textContent = '🔥 ' + S.streak + '   ×' + mult();
+      el.dataset.m = mult();
+      el.classList.add('on');
+    } else {
+      el.textContent = '';
+      el.classList.remove('on');
+    }
+    if (pulse) { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
+  }
   function hud() {
     $('lives').textContent = S.lives;
     $('level').textContent = S.level;
     $('score').textContent = S.score;
     $('dispNum').textContent = S.player;
     $('progBar').style.width = Math.min(100, S.eaten / S.goal * 100) + '%';
+    updateCombo(false);
   }
-  function setBackground() {
-    const c = BACKGROUNDS[(S.level - 1) % BACKGROUNDS.length];
+  function setBackground(level) {
+    const pal = curTheme().pal;
+    const c = pal[(level - 1) % pal.length];
     document.body.style.background = `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
+  }
+  function applyTheme() {
+    const th = curTheme();
+    const r = document.documentElement.style;
+    r.setProperty('--n1', th.num[0]);
+    r.setProperty('--n2', th.num[1]);
+    setBackground(S.playing ? S.level : 1);
   }
   function toast(msg, cls) {
     const el = $('toast');
@@ -611,6 +815,13 @@
     el.className = cls || '';
     void el.offsetWidth;
     el.classList.add('show');
+  }
+  function popPoints(text, cls) {
+    const el = document.createElement('div');
+    el.className = 'pts' + (cls ? ' ' + cls : '');
+    el.textContent = text;
+    $('area').appendChild(el);
+    setTimeout(() => el.remove(), 950);
   }
   function open(id) { $(id).classList.add('open'); }
   function close(id) { $(id).classList.remove('open'); }
@@ -624,15 +835,122 @@
     $('levelPick').classList.toggle('hidden', maxLevel <= 1);
   }
 
+  // ---------- Logros ----------
+  const achText = a => t('ach_' + a.type, { n: a.n.toLocaleString(lang) });
+  function achValue(type) {
+    switch (type) {
+      case 'eat':    return stats.eaten;
+      case 'streak': return Math.max(stats.streak, S.bestStreak || 0);
+      case 'level':  return Math.max(maxLevel, S.level);
+      case 'score':  return Math.max(best, S.score);
+      case 'gold':   return stats.gold;
+      case 'wild':   return stats.wild;
+      case 'games':  return stats.games;
+    }
+    return 0;
+  }
+  function saveStats() {
+    stats.streak = Math.max(stats.streak, S.bestStreak || 0);
+    lsSet('comenum_stats', JSON.stringify(stats));
+  }
+  let achQueue = [], achBusy = false;
+  function showAch(msg) { achQueue.push(msg); if (!achBusy) nextAch(); }
+  function nextAch() {
+    const m = achQueue.shift();
+    if (!m) { achBusy = false; return; }
+    achBusy = true;
+    const el = $('achToast');
+    el.textContent = m;
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    setTimeout(nextAch, 3100);
+  }
+  function checkAchievements() {
+    let changed = false;
+    ACHS.forEach(a => {
+      if (unlocked.has(a.id)) return;
+      if (achValue(a.type) >= a.n) {
+        unlocked.add(a.id);
+        changed = true;
+        let msg = '🏆 ' + achText(a);
+        THEMES.forEach(th => { if (th.req === a.id) msg += '  ·  🎨 ' + T.themes[th.id]; });
+        showAch(msg);
+        sfx('ach');
+      }
+    });
+    if (changed) {
+      lsSet('comenum_ach', JSON.stringify([...unlocked]));
+      saveStats();
+    }
+  }
+  function selectTheme(id) {
+    themeId = id;
+    lsSet('comenum_theme', id);
+    applyTheme();
+    renderAch();
+    sfx('button');
+  }
+  function renderAch() {
+    const tl = $('themeList');
+    tl.innerHTML = '';
+    THEMES.forEach(th => {
+      const ok = themeUnlocked(th);
+      const row = document.createElement('div');
+      row.className = 'row ' + (ok ? 'can' : 'lock') + (th.id === themeId ? ' sel' : '');
+      const sw = document.createElement('span');
+      sw.className = 'sw';
+      sw.style.background = `linear-gradient(135deg, ${th.pal[0][0]}, ${th.pal[0][1]})`;
+      const tx = document.createElement('span');
+      tx.className = 'tx';
+      tx.textContent = T.themes[th.id];
+      if (!ok) {
+        const sm = document.createElement('small');
+        sm.textContent = achText(achById(th.req));
+        tx.appendChild(sm);
+      }
+      const st = document.createElement('span');
+      st.className = 'st';
+      st.textContent = !ok ? '🔒' : (th.id === themeId ? '✓ ' + t('theme_active') : '');
+      row.appendChild(sw); row.appendChild(tx); row.appendChild(st);
+      if (ok) row.addEventListener('click', () => selectTheme(th.id));
+      tl.appendChild(row);
+    });
+
+    const al = $('achList');
+    al.innerHTML = '';
+    let n = 0;
+    ACHS.forEach(a => {
+      const done = unlocked.has(a.id);
+      if (done) n++;
+      const row = document.createElement('div');
+      row.className = 'row ' + (done ? 'done' : 'lock');
+      const ic = document.createElement('span');
+      ic.className = 'ic';
+      ic.textContent = a.icon;
+      const tx = document.createElement('span');
+      tx.className = 'tx';
+      tx.textContent = achText(a);
+      const st = document.createElement('span');
+      st.className = 'st';
+      st.textContent = done ? '✅' : '🔒';
+      row.appendChild(ic); row.appendChild(tx); row.appendChild(st);
+      al.appendChild(row);
+    });
+    $('achCount').textContent = n + ' / ' + ACHS.length + ' 🏆';
+  }
+
   // ---------- Números ----------
   function spawnNumber(overshoot) {
     const el = document.createElement('div');
-    el.className = 'num';
-    const v = Math.floor(Math.random() * 10);
-    el.textContent = v;
+    const r = Math.random();
+    let kind = 'normal';
+    if (r < P_WILD) kind = 'wild';
+    else if (r < P_WILD + P_GOLD) kind = 'gold';
+    el.className = 'num' + (kind !== 'normal' ? ' ' + kind : '');
+    const v = kind === 'wild' ? -1 : Math.floor(Math.random() * 10);
+    el.textContent = kind === 'wild' ? '?' : v;
     $('strip').appendChild(el);
     const x = $('strip').clientWidth - NUM - 6 - overshoot;
-    S.numbers.push({ v, x, el });
+    S.numbers.push({ v, x, el, kind });
   }
   function removeNumber(i) {
     const n = S.numbers.splice(i, 1)[0];
@@ -644,14 +962,31 @@
   }
 
   // ---------- Reglas ----------
-  function award() { S.score += 10 * S.level; S.eaten++; }
+  // Da los puntos de un número comido. viaEat = true si se comió con el visor (suma racha).
+  function awardNumber(n, viaEat) {
+    if (viaEat) {
+      S.streak++;
+      if (S.streak > S.bestStreak) S.bestStreak = S.streak;
+    }
+    const gold = n.kind === 'gold';
+    const pts = 10 * S.level * mult() * (gold ? 3 : 1);
+    S.score += pts;
+    S.eaten++;
+    stats.eaten++;
+    if (gold) stats.gold++;
+    if (n.kind === 'wild') stats.wild++;
+    return pts;
+  }
+  function breakStreak() {
+    if (S.streak > 0) { S.streak = 0; updateCombo(false); }
+  }
   function checkLevel() {
     if (S.eaten >= S.goal) {
       S.level++;
       S.eaten = 0;
       S.goal = 10 + (S.level - 1) * 5;
       if (S.level > maxLevel) { maxLevel = S.level; lsSet('comenum_maxlevel', String(maxLevel)); }
-      setBackground();
+      setBackground(S.level);
       toast(t('level_up', { n: S.level }), 'good');
       sfx('level');
     }
@@ -661,16 +996,23 @@
     const n = S.numbers[0];
     const d = $('display');
     d.classList.remove('ok', 'bad'); void d.offsetWidth;
-    if (n && n.v === S.player) {
+    if (n && (n.kind === 'wild' || n.v === S.player)) {
       removeNumber(0);
-      award();
-      sfx('eat');
+      const before = mult();
+      const pts = awardNumber(n, true);
+      const after = mult();
+      sfx(n.kind === 'gold' ? 'gold' : 'eat');
+      if (after > before) sfx('combo');
       d.classList.add('ok');
+      popPoints('+' + pts, n.kind === 'gold' ? 'gold' : '');
+      updateCombo(after > before);
       checkLevel();
+      checkAchievements();
     } else {
       sfx('wrong');
       vibrate(40);
       d.classList.add('bad');
+      breakStreak();
     }
     hud();
   }
@@ -682,6 +1024,7 @@
   }
   function loseLife() {
     S.lives--;
+    breakStreak();
     clearNumbers();           // respiro para el jugador
     S.breath = 2;             // 2 s sin números nuevos
     S.dist = SPACING;
@@ -735,11 +1078,19 @@
       case 'fast':
         S.speedMult = 1.6; S.effectLeft = 5; S.effectKey = 'faster';
         break;
-      case 'clear':
-        for (let k = 0; k < 4 && S.numbers.length; k++) { removeNumber(0); award(); }
+      case 'clear': {
+        let total = 0;
+        for (let k = 0; k < 4 && S.numbers.length; k++) {
+          const n = S.numbers[0];
+          removeNumber(0);
+          total += awardNumber(n, false);   // da puntos, pero no suma racha
+        }
+        if (total > 0) popPoints('+' + total);
         checkLevel();
+        checkAchievements();
         toast(t('eaten'), 'good');
         break;
+      }
     }
     hud();
   }
@@ -814,9 +1165,9 @@
     lastSec = -1;
     $('time').textContent = '00:00';
     $('effect').textContent = '';
-    setBackground();
+    setBackground(S.level);
     hud();
-    ['ovStart', 'ovOver', 'ovPause'].forEach(close);
+    ['ovStart', 'ovOver', 'ovPause', 'ovAch'].forEach(close);
     startMusic();
   }
   function showGameOver() {
@@ -825,9 +1176,13 @@
     if (isRecord) { best = S.score; lsSet('comenum_best', String(best)); }
     if (S.level > maxLevel) maxLevel = S.level;
     lsSet('comenum_maxlevel', String(maxLevel));
+    stats.games++;
+    checkAchievements();
+    saveStats();
     $('finalScore').textContent = S.score;
     $('finalLevel').textContent = S.level;
     $('finalTime').textContent = fmt(S.time);
+    $('finalStreak').textContent = S.bestStreak;
     $('finalBest').textContent = best;
     $('newRecord').classList.toggle('hidden', !isRecord);
     open('ovOver');
@@ -919,6 +1274,8 @@
   $('btnHowTo').addEventListener('click', () => { ensureAudio(); sfx('button'); openHelp(); });
   $('btnHelpClose').addEventListener('click', () => { sfx('button'); closeHelp(); });
   $('btnIOSClose').addEventListener('click', () => close('ovIOS'));
+  $('btnAch').addEventListener('click', () => { ensureAudio(); sfx('button'); renderAch(); open('ovAch'); });
+  $('btnAchClose').addEventListener('click', () => { sfx('button'); close('ovAch'); });
   $('btnShareStart').addEventListener('click', () => share(best));
   $('btnShareOver').addEventListener('click', () => share(S.score));
   $('btnSound').addEventListener('click', () => {
@@ -935,8 +1292,8 @@
   });
 
   // Pausa automática: llamadas, cambio de app, bloqueo de pantalla, avisos flotantes
-  document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
-  window.addEventListener('pagehide', pauseGame);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { saveStats(); pauseGame(); } });
+  window.addEventListener('pagehide', () => { saveStats(); pauseGame(); });
   window.addEventListener('blur', pauseGame);
 
   // Teclado (ordenador): ← − | → + | ↓ comer | ↑ coger sorpresa | P pausa
@@ -973,6 +1330,7 @@
 
   // ---------- Arranque ----------
   applyLang();
+  applyTheme();
   refreshStart();
   updateSoundIcon();
   hud();
