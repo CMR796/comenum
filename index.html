@@ -526,8 +526,8 @@
   //   niveles 1-5: +0,25 por nivel · niveles 6-15: +0,08 por nivel · a partir del 15: +0,03 por nivel
   function speedFactor(L) {
     if (L <= 5) return 1 + 0.25 * (L - 1);
-    if (L <= 15) return 2 + 0.08 * (L - 5);
-    return 2.8 + 0.03 * (L - 15);
+    if (L <= 15) return 2 + 0.05 * (L - 5);
+    return 2.5 + 0.02 * (L - 15);
   }
   // Números necesarios para pasar de nivel (con tope)
   function goalFor(L) { return Math.min(MAX_GOAL, 10 + (L - 1) * 5); }
