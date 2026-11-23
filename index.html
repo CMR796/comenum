@@ -293,6 +293,19 @@
 
   /* Mensajes de fin de partida */
   .msgs p { background: #f1eefb; border-radius: 10px; padding: 7px 10px; font-size: 14px; margin: 6px 0; }
+
+  /* Copia de seguridad */
+  textarea.code {
+    display: block; width: 100%; margin-top: 8px; padding: 8px; border-radius: 10px;
+    border: 1px solid #c9c2e6; background: #faf9ff; color: #2b2150;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.3;
+    resize: none; word-break: break-all;
+    -webkit-user-select: text; user-select: text;
+  }
+  .msgline { min-height: 20px; font-size: 14px; font-weight: 800; }
+  .msgline.ok { color: #1e8e57; }
+  .msgline.err { color: #d94a4a; }
+  .hintlink { cursor: pointer; color: #5b3ea8; font-weight: 800; text-decoration: underline; opacity: 1; }
 </style>
 </head>
 <body>
@@ -335,6 +348,7 @@
       <p data-i18n="tagline"></p>
       <p><span data-i18n="record"></span>: <span class="big" id="bestStart">0</span></p>
       <p class="info" id="startInfo"></p>
+      <p class="info hintlink hidden" id="backupHint" data-i18n="backup_hint"></p>
       <div id="chBanner" class="banner hidden">
         <div id="chText"></div>
         <button class="btn orange" id="btnAccept" data-i18n="ch_accept"></button>
@@ -358,6 +372,7 @@
         <button class="btn ghost" id="btnHowTo" data-i18n="howto"></button>
         <button class="btn ghost" id="btnInstall" data-i18n="install"></button>
       </div>
+      <button class="btn ghost" id="btnBackup" data-i18n="backup_btn"></button>
       <select id="langSel" aria-label="Language"></select>
     </div>
   </div>
@@ -438,6 +453,35 @@
       <button class="btn" id="btnStatsClose" data-i18n="close"></button>
     </div>
   </div>
+
+  <!-- Copia de seguridad -->
+  <div class="overlay" id="ovBackup">
+    <div class="card">
+      <h3 data-i18n="backup_title"></h3>
+      <p class="info" data-i18n="backup_intro"></p>
+
+      <div class="sec" data-i18n="backup_export"></div>
+      <textarea id="bkOut" class="code" readonly rows="3" spellcheck="false"></textarea>
+      <div class="btnrow">
+        <button class="btn ghost" id="bkCopy" data-i18n="backup_copy"></button>
+        <button class="btn ghost" id="bkShare" data-i18n="backup_share"></button>
+        <button class="btn ghost" id="bkDown" data-i18n="backup_download"></button>
+      </div>
+      <p class="info" id="bkLast"></p>
+
+      <div class="sec" data-i18n="backup_import"></div>
+      <textarea id="bkIn" class="code" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"></textarea>
+      <div class="btnrow">
+        <button class="btn ghost" id="bkFileBtn" data-i18n="backup_file"></button>
+        <button class="btn" id="bkImport" data-i18n="backup_import_btn"></button>
+      </div>
+      <input type="file" id="bkFile" accept=".txt,text/plain" class="hidden">
+      <p class="info" data-i18n="backup_merge"></p>
+      <p class="msgline" id="bkMsg"></p>
+      <p class="info" id="bkProt"></p>
+      <button class="btn" id="btnBackupClose" data-i18n="close"></button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -457,6 +501,7 @@
   const MIN_REACT = 120;     // ms: tiempos menores se descartan (medición poco fiable)
   const MAX_REACT = 8000;    // ms: tiempos mayores se recortan para no distorsionar la media
   const GOALS = [5, 10, 20]; // objetivos semanales posibles (partidas)
+  const BACKUP_DAYS = 14;    // días tras los que se recuerda hacer una copia
 
   // ---------- Estadísticas anónimas (GoatCounter) ----------
   function track(path, title) {
@@ -631,7 +676,7 @@
       help7: `Rachas: cada 5 números seguidos sin fallar sube el multiplicador (hasta ×5). Un fallo, o perder una vida, lo reinicia.`,
       help8: `Número dorado ⭐ = puntos ×3. Número «?» = comodín: se come con cualquier número.`,
       help9: `Reto diario: la misma secuencia de números para todos cada día. Puedes retar a un amigo con un enlace.`,
-      help10: `En Estadísticas ves tu tiempo de reacción y tu evolución semanal.`,
+      help10: `En Estadísticas ves tu tiempo de reacción y tu evolución semanal. Con la copia de seguridad puedes llevarte tu progreso a otro dispositivo.`,
       ok: `Entendido`, close: `Cerrar`,
       ios_title: `Instalar en iPhone`,
       ios1: `1. Abre esta página en <b>Safari</b>.`,
@@ -679,6 +724,20 @@
              `Fija la vista en el primer número y olvida el resto: así afinas tu concentración.`,
              `Jugar un poco cada día rinde más que jugar mucho un solo día.`,
              `Mientras comes un número, ve pensando en el siguiente: así entrenas tu memoria rápida.`],
+      backup_btn: `💾 Copia de seguridad`, backup_title: `Copia de seguridad`,
+      backup_intro: `Guarda tu progreso (récord, logros, estadísticas, rachas) en un código o archivo, y úsalo para recuperarlo o seguir en otro móvil u ordenador.`,
+      backup_export: `1. Tu código de copia`, backup_copy: `📋 Copiar`, backup_copied: `¡Copiado! ✓`,
+      backup_share: `📤 Enviar`, backup_download: `⬇️ Archivo`,
+      backup_import: `2. Recuperar datos`, backup_paste: `Pega aquí tu código`,
+      backup_file: `📂 Elegir archivo`, backup_import_btn: `⬆️ Importar`,
+      backup_merge: `Los datos se combinan con los de este dispositivo: se conservan los mejores resultados de ambos.`,
+      backup_ok: `✓ Datos importados. Récord: {b} · Nivel máximo: {l} · Logros: {a}`,
+      backup_err: `El código no es válido. Cópialo entero, sin cambiar nada.`,
+      backup_last: `Última copia: {d}`, backup_never: `Todavía no has hecho ninguna copia.`,
+      backup_prot_yes: `🔒 Tu navegador protege estos datos del borrado automático.`,
+      backup_prot_no: `⚠️ El navegador podría borrar estos datos si le falta espacio. Haz copias de vez en cuando.`,
+      backup_hint: `💾 Haz una copia de seguridad de tu progreso`,
+      backup_share_text: `Mi copia de seguridad de Comenum:`,
       themes: { classic: `Clásico`, ocean: `Océano`, sunset: `Atardecer`, forest: `Bosque`, candy: `Caramelo`, night: `Noche`, neon: `Neón`, gold: `Dorado` },
       funny: [`¡Eres más lento que un caracol! 🐌`, `¡Debes entrenar más los pulgares! 👍`, `¡Mi abuela es más rápida! 👵`,
               `¿Estás dormido o qué? 😴`, `¡Hasta una tortuga te gana! 🐢`, `¡Necesitas más café! ☕`,
@@ -701,7 +760,7 @@
       help7: `Streaks: every 5 numbers in a row without a mistake raises the multiplier (up to ×5). A mistake, or losing a life, resets it.`,
       help8: `Golden number ⭐ = triple points. Number “?” = wildcard: it can be eaten with any number.`,
       help9: `Daily challenge: the same number sequence for everyone each day. You can challenge a friend with a link.`,
-      help10: `In Statistics you can see your reaction time and your weekly progress.`,
+      help10: `In Statistics you can see your reaction time and your weekly progress. With the backup you can take your progress to another device.`,
       ok: `Got it`, close: `Close`,
       ios_title: `Install on iPhone`,
       ios1: `1. Open this page in <b>Safari</b>.`,
@@ -749,6 +808,20 @@
              `Keep your eyes on the first number and forget the rest: it sharpens your focus.`,
              `Playing a little every day beats playing a lot on a single day.`,
              `While you eat one number, think about the next: that trains your quick memory.`],
+      backup_btn: `💾 Backup`, backup_title: `Backup`,
+      backup_intro: `Save your progress (best score, achievements, statistics, streaks) as a code or file, and use it to restore it or continue on another phone or computer.`,
+      backup_export: `1. Your backup code`, backup_copy: `📋 Copy`, backup_copied: `Copied! ✓`,
+      backup_share: `📤 Send`, backup_download: `⬇️ File`,
+      backup_import: `2. Restore data`, backup_paste: `Paste your code here`,
+      backup_file: `📂 Choose file`, backup_import_btn: `⬆️ Import`,
+      backup_merge: `Data is merged with what is on this device: the best results from both are kept.`,
+      backup_ok: `✓ Data imported. Best: {b} · Max level: {l} · Achievements: {a}`,
+      backup_err: `The code is not valid. Copy it in full, without changing anything.`,
+      backup_last: `Last backup: {d}`, backup_never: `You haven't made a backup yet.`,
+      backup_prot_yes: `🔒 Your browser protects this data from automatic deletion.`,
+      backup_prot_no: `⚠️ The browser might delete this data if it runs low on space. Back up from time to time.`,
+      backup_hint: `💾 Back up your progress`,
+      backup_share_text: `My Comenum backup:`,
       themes: { classic: `Classic`, ocean: `Ocean`, sunset: `Sunset`, forest: `Forest`, candy: `Candy`, night: `Night`, neon: `Neon`, gold: `Gold` },
       funny: [`Slower than a snail! 🐌`, `Time to train those thumbs! 👍`, `My grandma is faster! 👵`,
               `Are you asleep? 😴`, `Even a turtle beats you! 🐢`, `You need more coffee! ☕`,
@@ -770,7 +843,7 @@
       help7: `Séries : tous les 5 nombres de suite sans erreur, le multiplicateur augmente (jusqu'à ×5). Une erreur, ou perdre une vie, le remet à zéro.`,
       help8: `Nombre doré ⭐ = points ×3. Nombre « ? » = joker : on peut le manger avec n'importe quel nombre.`,
       help9: `Défi du jour : la même suite de nombres pour tout le monde chaque jour. Tu peux défier un ami avec un lien.`,
-      help10: `Dans Statistiques, tu vois ton temps de réaction et ta progression par semaine.`,
+      help10: `Dans Statistiques, tu vois ton temps de réaction et ta progression par semaine. Avec la sauvegarde, tu peux emporter ta progression sur un autre appareil.`,
       ok: `Compris`, close: `Fermer`,
       ios_title: `Installer sur iPhone`,
       ios1: `1. Ouvre cette page dans <b>Safari</b>.`,
@@ -818,6 +891,20 @@
              `Garde les yeux sur le premier nombre et oublie le reste : ça aiguise ta concentration.`,
              `Jouer un peu chaque jour vaut mieux que beaucoup un seul jour.`,
              `Pendant que tu manges un nombre, pense au suivant : tu entraînes ta mémoire rapide.`],
+      backup_btn: `💾 Sauvegarde`, backup_title: `Sauvegarde`,
+      backup_intro: `Enregistre ta progression (record, succès, statistiques, séries) dans un code ou un fichier pour la récupérer ou continuer sur un autre téléphone ou ordinateur.`,
+      backup_export: `1. Ton code de sauvegarde`, backup_copy: `📋 Copier`, backup_copied: `Copié ! ✓`,
+      backup_share: `📤 Envoyer`, backup_download: `⬇️ Fichier`,
+      backup_import: `2. Récupérer les données`, backup_paste: `Colle ici ton code`,
+      backup_file: `📂 Choisir un fichier`, backup_import_btn: `⬆️ Importer`,
+      backup_merge: `Les données sont fusionnées avec celles de cet appareil : on garde les meilleurs résultats des deux.`,
+      backup_ok: `✓ Données importées. Record : {b} · Niveau max : {l} · Succès : {a}`,
+      backup_err: `Le code n'est pas valide. Copie-le en entier, sans rien modifier.`,
+      backup_last: `Dernière sauvegarde : {d}`, backup_never: `Tu n'as encore fait aucune sauvegarde.`,
+      backup_prot_yes: `🔒 Ton navigateur protège ces données contre l'effacement automatique.`,
+      backup_prot_no: `⚠️ Le navigateur pourrait effacer ces données s'il manque de place. Fais des sauvegardes de temps en temps.`,
+      backup_hint: `💾 Fais une sauvegarde de ta progression`,
+      backup_share_text: `Ma sauvegarde de Comenum :`,
       themes: { classic: `Classique`, ocean: `Océan`, sunset: `Crépuscule`, forest: `Forêt`, candy: `Bonbon`, night: `Nuit`, neon: `Néon`, gold: `Or` },
       funny: [`Plus lent qu'un escargot ! 🐌`, `Entraîne un peu plus tes pouces ! 👍`, `Ma grand-mère est plus rapide ! 👵`,
               `Tu dors ou quoi ? 😴`, `Même une tortue te bat ! 🐢`, `Il te faut plus de café ! ☕`,
@@ -839,7 +926,7 @@
       help7: `Serien: Alle 5 Zahlen in Folge ohne Fehler steigt der Multiplikator (bis ×5). Ein Fehler oder ein verlorenes Leben setzt ihn zurück.`,
       help8: `Goldene Zahl ⭐ = dreifache Punkte. Zahl „?“ = Joker: Sie kann mit jeder Zahl gegessen werden.`,
       help9: `Tagesaufgabe: Jeden Tag dieselbe Zahlenfolge für alle. Mit einem Link kannst du einen Freund herausfordern.`,
-      help10: `Unter Statistiken siehst du deine Reaktionszeit und deine Entwicklung pro Woche.`,
+      help10: `Unter Statistiken siehst du deine Reaktionszeit und deine Entwicklung pro Woche. Mit der Sicherung nimmst du deinen Fortschritt auf ein anderes Gerät mit.`,
       ok: `Verstanden`, close: `Schließen`,
       ios_title: `Auf dem iPhone installieren`,
       ios1: `1. Öffne diese Seite in <b>Safari</b>.`,
@@ -887,6 +974,20 @@
              `Behalte die erste Zahl im Blick und vergiss den Rest: Das schärft deine Konzentration.`,
              `Jeden Tag ein bisschen zu spielen bringt mehr als an einem Tag sehr viel.`,
              `Denke schon an die nächste Zahl, während du die aktuelle isst: Das trainiert dein Kurzzeitgedächtnis.`],
+      backup_btn: `💾 Sicherung`, backup_title: `Sicherung`,
+      backup_intro: `Speichere deinen Fortschritt (Rekord, Erfolge, Statistiken, Serien) als Code oder Datei, um ihn wiederherzustellen oder auf einem anderen Handy oder Computer weiterzuspielen.`,
+      backup_export: `1. Dein Sicherungscode`, backup_copy: `📋 Kopieren`, backup_copied: `Kopiert! ✓`,
+      backup_share: `📤 Senden`, backup_download: `⬇️ Datei`,
+      backup_import: `2. Daten wiederherstellen`, backup_paste: `Füge hier deinen Code ein`,
+      backup_file: `📂 Datei wählen`, backup_import_btn: `⬆️ Importieren`,
+      backup_merge: `Die Daten werden mit denen dieses Geräts zusammengeführt: Die besten Ergebnisse beider bleiben erhalten.`,
+      backup_ok: `✓ Daten importiert. Rekord: {b} · Höchstes Level: {l} · Erfolge: {a}`,
+      backup_err: `Der Code ist ungültig. Kopiere ihn vollständig und ändere nichts.`,
+      backup_last: `Letzte Sicherung: {d}`, backup_never: `Du hast noch keine Sicherung gemacht.`,
+      backup_prot_yes: `🔒 Dein Browser schützt diese Daten vor automatischem Löschen.`,
+      backup_prot_no: `⚠️ Der Browser könnte diese Daten löschen, wenn Speicher knapp wird. Mache ab und zu eine Sicherung.`,
+      backup_hint: `💾 Sichere deinen Fortschritt`,
+      backup_share_text: `Meine Comenum-Sicherung:`,
       themes: { classic: `Klassisch`, ocean: `Ozean`, sunset: `Sonnenuntergang`, forest: `Wald`, candy: `Bonbon`, night: `Nacht`, neon: `Neon`, gold: `Gold` },
       funny: [`Langsamer als eine Schnecke! 🐌`, `Trainiere mehr deine Daumen! 👍`, `Meine Oma ist schneller! 👵`,
               `Schläfst du? 😴`, `Sogar eine Schildkröte schlägt dich! 🐢`, `Du brauchst mehr Kaffee! ☕`,
@@ -908,7 +1009,7 @@
       help7: `Serie: ogni 5 numeri di fila senza errori sale il moltiplicatore (fino a ×5). Un errore, o perdere una vita, lo azzera.`,
       help8: `Numero dorato ⭐ = punti ×3. Numero «?» = jolly: si può mangiare con qualsiasi numero.`,
       help9: `Sfida del giorno: la stessa sequenza di numeri per tutti, ogni giorno. Puoi sfidare un amico con un link.`,
-      help10: `In Statistiche vedi il tuo tempo di reazione e l'andamento settimanale.`,
+      help10: `In Statistiche vedi il tuo tempo di reazione e l'andamento settimanale. Con la copia di sicurezza porti i tuoi progressi su un altro dispositivo.`,
       ok: `Ho capito`, close: `Chiudi`,
       ios_title: `Installa su iPhone`,
       ios1: `1. Apri questa pagina in <b>Safari</b>.`,
@@ -956,6 +1057,20 @@
              `Tieni gli occhi sul primo numero e dimentica il resto: affini la concentrazione.`,
              `Giocare un po' ogni giorno vale più che giocare tanto in un solo giorno.`,
              `Mentre mangi un numero, pensa al successivo: alleni la memoria rapida.`],
+      backup_btn: `💾 Copia di sicurezza`, backup_title: `Copia di sicurezza`,
+      backup_intro: `Salva i tuoi progressi (record, traguardi, statistiche, serie) in un codice o in un file per recuperarli o continuare su un altro telefono o computer.`,
+      backup_export: `1. Il tuo codice di backup`, backup_copy: `📋 Copia`, backup_copied: `Copiato! ✓`,
+      backup_share: `📤 Invia`, backup_download: `⬇️ File`,
+      backup_import: `2. Recupera i dati`, backup_paste: `Incolla qui il tuo codice`,
+      backup_file: `📂 Scegli file`, backup_import_btn: `⬆️ Importa`,
+      backup_merge: `I dati vengono uniti a quelli di questo dispositivo: si mantengono i risultati migliori di entrambi.`,
+      backup_ok: `✓ Dati importati. Record: {b} · Livello massimo: {l} · Traguardi: {a}`,
+      backup_err: `Il codice non è valido. Copialo per intero, senza modificare nulla.`,
+      backup_last: `Ultima copia: {d}`, backup_never: `Non hai ancora fatto nessuna copia.`,
+      backup_prot_yes: `🔒 Il tuo browser protegge questi dati dalla cancellazione automatica.`,
+      backup_prot_no: `⚠️ Il browser potrebbe cancellare questi dati se manca spazio. Fai una copia ogni tanto.`,
+      backup_hint: `💾 Fai una copia di sicurezza dei tuoi progressi`,
+      backup_share_text: `Il mio backup di Comenum:`,
       themes: { classic: `Classico`, ocean: `Oceano`, sunset: `Tramonto`, forest: `Foresta`, candy: `Caramella`, night: `Notte`, neon: `Neon`, gold: `Oro` },
       funny: [`Più lento di una lumaca! 🐌`, `Devi allenare di più i pollici! 👍`, `Mia nonna è più veloce! 👵`,
               `Dormi o cosa? 😴`, `Anche una tartaruga ti batte! 🐢`, `Ti serve più caffè! ☕`,
@@ -977,7 +1092,7 @@
       help7: `Sequências: a cada 5 números seguidos sem errar, o multiplicador sobe (até ×5). Um erro, ou perder uma vida, zera tudo.`,
       help8: `Número dourado ⭐ = pontos ×3. Número «?» = curinga: pode ser comido com qualquer número.`,
       help9: `Desafio diário: a mesma sequência de números para todos, a cada dia. Você pode desafiar um amigo com um link.`,
-      help10: `Em Estatísticas você vê seu tempo de reação e sua evolução semanal.`,
+      help10: `Em Estatísticas você vê seu tempo de reação e sua evolução semanal. Com a cópia de segurança você leva seu progresso para outro dispositivo.`,
       ok: `Entendi`, close: `Fechar`,
       ios_title: `Instalar no iPhone`,
       ios1: `1. Abra esta página no <b>Safari</b>.`,
@@ -1025,6 +1140,20 @@
              `Mantenha os olhos no primeiro número e esqueça o resto: isso afina sua concentração.`,
              `Jogar um pouco todo dia rende mais do que jogar muito em um único dia.`,
              `Enquanto come um número, pense no próximo: assim você treina a memória rápida.`],
+      backup_btn: `💾 Cópia de segurança`, backup_title: `Cópia de segurança`,
+      backup_intro: `Guarde seu progresso (recorde, conquistas, estatísticas, sequências) em um código ou arquivo para recuperá-lo ou continuar em outro celular ou computador.`,
+      backup_export: `1. Seu código de backup`, backup_copy: `📋 Copiar`, backup_copied: `Copiado! ✓`,
+      backup_share: `📤 Enviar`, backup_download: `⬇️ Arquivo`,
+      backup_import: `2. Recuperar dados`, backup_paste: `Cole aqui o seu código`,
+      backup_file: `📂 Escolher arquivo`, backup_import_btn: `⬆️ Importar`,
+      backup_merge: `Os dados são combinados com os deste dispositivo: os melhores resultados de ambos são mantidos.`,
+      backup_ok: `✓ Dados importados. Recorde: {b} · Nível máximo: {l} · Conquistas: {a}`,
+      backup_err: `O código não é válido. Copie-o inteiro, sem alterar nada.`,
+      backup_last: `Última cópia: {d}`, backup_never: `Você ainda não fez nenhuma cópia.`,
+      backup_prot_yes: `🔒 Seu navegador protege estes dados contra apagamento automático.`,
+      backup_prot_no: `⚠️ O navegador pode apagar estes dados se faltar espaço. Faça cópias de vez em quando.`,
+      backup_hint: `💾 Faça uma cópia de segurança do seu progresso`,
+      backup_share_text: `Meu backup do Comenum:`,
       themes: { classic: `Clássico`, ocean: `Oceano`, sunset: `Pôr do sol`, forest: `Floresta`, candy: `Doce`, night: `Noite`, neon: `Neon`, gold: `Ouro` },
       funny: [`Mais lento que uma lesma! 🐌`, `Treine mais esses polegares! 👍`, `Minha avó é mais rápida! 👵`,
               `Está dormindo? 😴`, `Até uma tartaruga ganha de você! 🐢`, `Você precisa de mais café! ☕`,
@@ -1053,6 +1182,7 @@
     T = I18N[lang];
     document.documentElement.lang = lang;
     document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+    $('bkIn').placeholder = t('backup_paste');
     $('langSel').value = lang;
     updateScoreLabel();
     refreshStart();
@@ -1227,6 +1357,10 @@
     } else {
       b.classList.add('hidden');
     }
+    // Recordatorio de copia de seguridad
+    const lb = parseInt(lsGet('comenum_lastbackup')) || 0;
+    const needHint = stats.games >= 5 && (Date.now() - lb) > BACKUP_DAYS * 86400000;
+    $('backupHint').classList.toggle('hidden', !needHint);
   }
 
   // ---------- Logros ----------
@@ -1419,6 +1553,210 @@
         box.appendChild(mk('div', 'tip', p >= 3 ? t('st_trend_up', { p: p }) : (p <= -3 ? t('st_trend_down') : t('st_trend_flat'))));
       }
     }
+  }
+
+  // ---------- Copia de seguridad (exportar / importar) ----------
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  // Número seguro: finito, no negativo y con tope
+  function nz(v, max) {
+    v = Number(v);
+    if (!isFinite(v) || v < 0) return 0;
+    return Math.min(v, max || 1e12);
+  }
+  const nzi = (v, max) => Math.floor(nz(v, max));
+  const hash7 = s => ('0000000' + hashStr(s).toString(36)).slice(-7);
+
+  function buildBackup() {
+    saveAll();
+    return {
+      v: 1, app: 'comenum', t: Date.now(),
+      best: best, maxLevel: maxLevel, goal: goal, theme: themeId,
+      stats: stats, days: days, weeks: weeks, daily: dailyRec, ach: Array.from(unlocked)
+    };
+  }
+  function encodeBackup() {
+    const json = JSON.stringify(buildBackup());
+    const b64 = btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return 'COMENUM1.' + b64 + '.' + hash7(json);
+  }
+  function decodeBackup(text) {
+    const s = String(text || '').replace(/\s+/g, '');
+    const m = /COMENUM1\.([A-Za-z0-9_-]+)\.([a-z0-9]{7})/.exec(s);
+    if (!m) return null;
+    let json;
+    try {
+      let b = m[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      json = atob(b);
+    } catch (e) { return null; }
+    if (hash7(json) !== m[2]) return null;
+    let o;
+    try { o = JSON.parse(json); } catch (e) { return null; }
+    if (!o || typeof o !== 'object' || o.app !== 'comenum' || o.v !== 1) return null;
+    return o;
+  }
+  // Combina los datos importados con los del dispositivo: se queda lo mejor de cada lado
+  function mergeBackup(o) {
+    best = Math.max(best, nzi(o.best));
+    maxLevel = Math.max(maxLevel, Math.max(1, nzi(o.maxLevel, 1000)));
+
+    const is = (o.stats && typeof o.stats === 'object') ? o.stats : {};
+    ['eaten', 'games', 'gold', 'wild', 'streak', 'ok', 'bad', 'daily', 'weeksDone'].forEach(k => {
+      stats[k] = Math.max(stats[k] || 0, nzi(is[k]));
+    });
+    const irn = nzi(is.rn);
+    if (irn > (stats.rn || 0)) { stats.rn = irn; stats.rsum = nz(is.rsum); }   // se queda el conjunto con más muestras
+    const irb = nz(is.rbest, MAX_REACT);
+    if (irb > 0 && (!stats.rbest || irb < stats.rbest)) stats.rbest = irb;
+
+    const id = (o.days && typeof o.days === 'object') ? o.days : {};
+    const il = (typeof id.last === 'string' && DATE_RE.test(id.last)) ? id.last : '';
+    if (il && (il > days.last || (il === days.last && nzi(id.streak, 100000) > days.streak))) {
+      days.last = il;
+      days.streak = nzi(id.streak, 100000);
+    }
+    days.best = Math.max(days.best || 0, nzi(id.best, 100000));
+    days.total = Math.max(days.total || 0, nzi(id.total, 100000));
+
+    const iw = (o.weeks && typeof o.weeks === 'object') ? o.weeks : {};
+    Object.keys(iw).forEach(k => {
+      if (!DATE_RE.test(k)) return;
+      const w = iw[k];
+      if (!w || typeof w !== 'object') return;
+      const cur = weeks[k] || { n: 0, sum: 0, ok: 0, bad: 0, games: 0, done: false };
+      const n2 = nzi(w.n, 1e7);
+      if (n2 > cur.n) { cur.n = n2; cur.sum = nz(w.sum, 1e11); }
+      cur.ok = Math.max(cur.ok || 0, nzi(w.ok, 1e7));
+      cur.bad = Math.max(cur.bad || 0, nzi(w.bad, 1e7));
+      cur.games = Math.max(cur.games || 0, nzi(w.games, 1e6));
+      cur.done = !!(cur.done || w.done);
+      weeks[k] = cur;
+    });
+
+    const dd = (o.daily && typeof o.daily === 'object') ? o.daily : {};
+    if (typeof dd.date === 'string' && DATE_RE.test(dd.date)) {
+      if (dd.date > dailyRec.date) {
+        dailyRec = { date: dd.date, best: nzi(dd.best), plays: nzi(dd.plays, 100000) };
+      } else if (dd.date === dailyRec.date) {
+        dailyRec.best = Math.max(dailyRec.best || 0, nzi(dd.best));
+        dailyRec.plays = Math.max(dailyRec.plays || 0, nzi(dd.plays, 100000));
+      }
+    }
+
+    if (Array.isArray(o.ach)) o.ach.forEach(a => { if (typeof a === 'string' && achById(a)) unlocked.add(a); });
+    if (GOALS.includes(o.goal)) goal = o.goal;
+    const th = THEMES.find(x => x.id === o.theme);
+    if (th && themeUnlocked(th)) themeId = th.id;
+
+    lsSet('comenum_best', String(best));
+    lsSet('comenum_maxlevel', String(maxLevel));
+    lsSet('comenum_goal', String(goal));
+    lsSet('comenum_ach', JSON.stringify(Array.from(unlocked)));
+    lsSet('comenum_theme', themeId);
+    saveAll();
+    applyTheme();
+    refreshStart();
+  }
+
+  function setBkMsg(text, kind) {
+    const el = $('bkMsg');
+    el.textContent = text || '';
+    el.className = 'msgline' + (kind ? ' ' + kind : '');
+  }
+  function refreshBackupInfo() {
+    const lb = parseInt(lsGet('comenum_lastbackup')) || 0;
+    $('bkLast').textContent = lb ? t('backup_last', { d: new Date(lb).toLocaleDateString(lang) }) : t('backup_never');
+  }
+  async function refreshProtection() {
+    const el = $('bkProt');
+    el.textContent = '';
+    try {
+      if (navigator.storage && navigator.storage.persisted) {
+        const p = await navigator.storage.persisted();
+        el.textContent = p ? t('backup_prot_yes') : t('backup_prot_no');
+      }
+    } catch (e) {}
+  }
+  async function openBackup() {
+    ensureAudio(); sfx('button');
+    $('bkOut').value = encodeBackup();
+    $('bkIn').value = '';
+    setBkMsg('');
+    refreshBackupInfo();
+    $('bkProt').textContent = '';
+    open('ovBackup');
+    track('backup-open', 'Abre copia de seguridad');
+    // Pide al navegador que proteja los datos del borrado automático (en Firefox puede mostrar un aviso)
+    try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) {}
+    refreshProtection();
+  }
+  function markBackup() {
+    lsSet('comenum_lastbackup', String(Date.now()));
+    refreshBackupInfo();
+    refreshStart();
+    track('backup-export', 'Exporta copia');
+  }
+  async function bkCopy() {
+    sfx('button');
+    const code = $('bkOut').value;
+    let ok = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(code); ok = true; }
+    } catch (e) {}
+    if (!ok) {
+      try {
+        const ta = $('bkOut');
+        ta.focus(); ta.select(); ta.setSelectionRange(0, code.length);
+        ok = document.execCommand('copy');
+      } catch (e) {}
+    }
+    if (ok) { markBackup(); setBkMsg(t('backup_copied'), 'ok'); }
+  }
+  async function bkShare() {
+    sfx('button');
+    const code = $('bkOut').value;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Comenum', text: t('backup_share_text') + '\n' + code });
+        markBackup();
+      } catch (e) {}
+    } else {
+      bkCopy();
+    }
+  }
+  function bkDownload() {
+    sfx('button');
+    try {
+      const blob = new Blob([$('bkOut').value + '\n'], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'comenum-backup-' + dateKey() + '.txt';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+      markBackup();
+    } catch (e) {}
+  }
+  function bkImport() {
+    sfx('button');
+    const o = decodeBackup($('bkIn').value);
+    if (!o) { setBkMsg(t('backup_err'), 'err'); return; }
+    mergeBackup(o);
+    $('bkOut').value = encodeBackup();
+    setBkMsg(t('backup_ok', { b: best, l: maxLevel, a: unlocked.size + '/' + ACHS.length }), 'ok');
+    track('backup-import', 'Importa copia');
+  }
+  function bkFileChosen(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (f.size > 200000) { setBkMsg(t('backup_err'), 'err'); e.target.value = ''; return; }
+    const r = new FileReader();
+    r.onload = () => { $('bkIn').value = String(r.result || ''); setBkMsg(''); };
+    r.onerror = () => setBkMsg(t('backup_err'), 'err');
+    r.readAsText(f);
+    e.target.value = '';
   }
 
   // ---------- Números ----------
@@ -1696,7 +2034,7 @@
     setBackground(S.level);
     updateScoreLabel();
     hud();
-    ['ovStart', 'ovOver', 'ovPause', 'ovAch', 'ovStats'].forEach(close);
+    ['ovStart', 'ovOver', 'ovPause', 'ovAch', 'ovStats', 'ovBackup'].forEach(close);
     startMusic();
     track(mode === 'normal' ? 'game-start' : 'game-start/' + mode, 'Partida iniciada (' + mode + ')');
   }
@@ -1897,6 +2235,15 @@
   $('btnAchClose').addEventListener('click', () => { sfx('button'); close('ovAch'); });
   $('btnStats').addEventListener('click', () => { ensureAudio(); sfx('button'); renderStats(); open('ovStats'); track('stats-open', 'Abre estadísticas'); });
   $('btnStatsClose').addEventListener('click', () => { sfx('button'); close('ovStats'); refreshStart(); });
+  $('btnBackup').addEventListener('click', openBackup);
+  $('backupHint').addEventListener('click', openBackup);
+  $('btnBackupClose').addEventListener('click', () => { sfx('button'); close('ovBackup'); refreshStart(); });
+  $('bkCopy').addEventListener('click', bkCopy);
+  $('bkShare').addEventListener('click', bkShare);
+  $('bkDown').addEventListener('click', bkDownload);
+  $('bkImport').addEventListener('click', bkImport);
+  $('bkFileBtn').addEventListener('click', () => { sfx('button'); $('bkFile').click(); });
+  $('bkFile').addEventListener('change', bkFileChosen);
   $('btnShareStart').addEventListener('click', shareStart);
   $('btnShareOver').addEventListener('click', shareScore);
   $('btnSound').addEventListener('click', () => {
