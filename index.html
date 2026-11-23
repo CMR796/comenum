@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="Comenum">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
-  :root { --n1: #ff7b54; --n2: #ffb347; }
+  :root { --n1: #ff7b54; --n2: #ffb347; --nf: 21px; }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
   body {
@@ -22,6 +22,7 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
   }
+  body.cb { --n1: #0d47a1; --n2: #42a5f5; }
   #app {
     position: relative;
     max-width: 480px;
@@ -37,8 +38,17 @@
     overflow: hidden;
   }
 
+  /* Adornos de temporada (detrás del juego) */
+  #deco { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+  .dp { position: absolute; top: -8%; opacity: .55; animation: dfall linear infinite; will-change: transform; }
+  .dp.rise { top: auto; bottom: -8%; animation-name: drise; }
+  @keyframes dfall { from { transform: translateY(-10vh) rotate(0deg); } to { transform: translateY(115vh) rotate(360deg); } }
+  @keyframes drise { from { transform: translateY(0) rotate(0deg); } to { transform: translateY(-115vh) rotate(180deg); } }
+  @media (prefers-reduced-motion: reduce) { .dp { animation: none; opacity: .25; } }
+
   /* Barra superior */
   .topbar {
+    position: relative; z-index: 1;
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px;
     background: rgba(0,0,0,.18);
@@ -52,7 +62,7 @@
   .ib:active { transform: scale(.92); }
 
   /* Puntuación */
-  #scoreWrap { text-align: center; padding: 8px 0 4px; }
+  #scoreWrap { position: relative; z-index: 1; text-align: center; padding: 8px 0 4px; }
   #scoreWrap .lbl { font-size: 13px; opacity: .85; letter-spacing: 1px; text-transform: uppercase; }
   #score { font-size: 54px; font-weight: 900; color: #ffd23f; text-shadow: 0 3px 8px rgba(0,0,0,.35); line-height: 1.05; }
   #prog { width: 55%; height: 7px; margin: 6px auto 0; background: rgba(255,255,255,.25); border-radius: 4px; overflow: hidden; }
@@ -85,7 +95,7 @@
   .num {
     position: absolute; left: 0; top: 8px; width: 40px; height: 40px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 21px; font-weight: 800; color: #fff;
+    font-size: var(--nf, 21px); font-weight: 800; color: #fff;
     text-shadow: 0 1px 2px rgba(0,0,0,.35);
     background: linear-gradient(135deg, var(--n1), var(--n2));
     box-shadow: 0 3px 8px rgba(0,0,0,.25);
@@ -99,12 +109,14 @@
     content: "★"; position: absolute; top: -6px; right: -3px; font-size: 15px; color: #fff;
     text-shadow: 0 0 4px #ff9800, 0 0 2px #000;
   }
+  body.cb .num.gold::after { font-size: 20px; top: -9px; right: -5px; }
   .num.wild {
     background: conic-gradient(#ff5e62, #ffd200, #43e97b, #4facfe, #a18cd1, #ff5e62);
-    font-size: 24px;
+    font-size: calc(var(--nf, 21px) + 3px);
   }
   .num.first { box-shadow: 0 0 0 3px #fff, 0 0 14px rgba(255,255,255,.9); }
   .num.gold.first { box-shadow: 0 0 0 3px #fff, 0 0 16px rgba(255,215,0,.95); }
+  .num.pv { position: static; flex: none; }
 
   /* Zona de juego (sorpresas) */
   #area { position: relative; flex: 1; }
@@ -133,6 +145,22 @@
     100% { opacity: 0; transform: translate(-50%, -42px) scale(1); }
   }
 
+  /* Tutorial */
+  #tutHint {
+    position: absolute; top: 6px; left: 8px; right: 8px; z-index: 5;
+    padding: 10px 12px 8px; border-radius: 16px;
+    background: rgba(255,255,255,.96); color: #2b2150; text-align: center;
+    font-weight: 800; font-size: 15px; line-height: 1.35;
+    box-shadow: 0 8px 22px rgba(0,0,0,.3); pointer-events: none;
+  }
+  #tutHint button { pointer-events: auto; }
+  .tutskip {
+    display: block; margin: 6px auto 0; background: none; border: none;
+    color: #5b3ea8; font-size: 13px; font-weight: 700; text-decoration: underline; cursor: pointer;
+  }
+  .hl { animation: hlGlow 1s ease-in-out infinite; }
+  @keyframes hlGlow { 50% { box-shadow: 0 0 0 7px rgba(255,255,255,.85), 0 0 22px rgba(255,255,255,.9); } }
+
   /* Controles (el margen inferior --cb lo calcula el juego según la posición elegida) */
   .controls {
     position: relative;
@@ -149,6 +177,9 @@
   .cbtn:active { background: rgba(255,255,255,.15); }
   #minus { border-radius: 38px 0 0 38px; padding-right: 44px; }
   #plus  { border-radius: 0 38px 38px 0; padding-left: 44px; }
+  .controls.lefty { flex-direction: row-reverse; }
+  .controls.lefty #minus { border-radius: 0 38px 38px 0; padding-right: 0; padding-left: 44px; }
+  .controls.lefty #plus  { border-radius: 38px 0 0 38px; padding-left: 0; padding-right: 44px; }
   #display {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     width: 100px; height: 100px; border-radius: 50%; cursor: pointer;
@@ -259,10 +290,11 @@
     font-size: 14px; background: #fff; color: #2b2150;
   }
 
-  /* Posición de los botones */
+  /* Ajustes */
   .posrow { margin-top: 14px; }
   .posrow .lab { font-size: 13px; font-weight: 700; color: #4b2c82; }
   .posrow .chip { min-width: 0; padding: 6px 14px; font-size: 13px; }
+  .prev { display: flex; justify-content: center; gap: 8px; margin: 8px 0 4px; }
 
   /* Logros y temas */
   .row {
@@ -289,7 +321,7 @@
   .sec { font-size: 15px; font-weight: 800; color: #5b3ea8; margin-top: 14px; text-align: left; }
   .bar { height: 10px; border-radius: 6px; background: #e3def5; overflow: hidden; margin-top: 6px; }
   .bar i { display: block; height: 100%; background: #43c68c; }
-  .chips { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
   .chip {
     min-width: 54px; padding: 7px 12px; border-radius: 999px; border: 2px solid #5b3ea8;
     background: #fff; color: #5b3ea8; font-weight: 800; font-size: 15px; cursor: pointer;
@@ -299,6 +331,12 @@
   .wk .l { width: 74px; flex: none; }
   .wk .bar { flex: 1; margin-top: 0; }
   .wk .v { width: 58px; text-align: right; font-weight: 800; flex: none; }
+  .dig { display: flex; align-items: flex-end; gap: 4px; height: 84px; margin-top: 10px; }
+  .dig .c { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+  .dig .c i { display: block; width: 100%; border-radius: 4px 4px 0 0; background: #9575cd; }
+  .dig .c.slow i { background: #ef6c00; }
+  .dig .c.fast i { background: #1e88e5; }
+  .dig .c b { font-size: 12px; margin-top: 2px; color: #4b2c82; }
 
   /* Mensajes de fin de partida */
   .msgs p { background: #f1eefb; border-radius: 10px; padding: 7px 10px; font-size: 14px; margin: 6px 0; }
@@ -320,6 +358,8 @@
 <body>
 <div id="app">
 
+  <div id="deco"></div>
+
   <div class="topbar">
     <div>❤️ <b id="lives">3</b></div>
     <div>⏱️ <b id="time">00:00</b></div>
@@ -339,7 +379,14 @@
 
   <div id="strip"></div>
 
-  <div id="area"><div id="effect"></div></div>
+  <div id="area">
+    <div id="effect"></div>
+    <div id="tutHint" class="hidden">
+      <div id="tutText"></div>
+      <button class="btn hidden" id="tutNext" data-i18n="tut_go"></button>
+      <button class="tutskip" id="tutSkip" data-i18n="tut_skip"></button>
+    </div>
+  </div>
 
   <div class="controls">
     <button class="cbtn" id="minus" aria-label="-">−</button>
@@ -357,6 +404,7 @@
       <p data-i18n="tagline"></p>
       <p><span data-i18n="record"></span>: <span class="big" id="bestStart">0</span></p>
       <p class="info" id="startInfo"></p>
+      <p class="info hidden" id="seasonMsg"></p>
       <p class="info hintlink hidden" id="backupHint" data-i18n="backup_hint"></p>
       <div id="chBanner" class="banner hidden">
         <div id="chText"></div>
@@ -381,10 +429,9 @@
         <button class="btn ghost" id="btnHowTo" data-i18n="howto"></button>
         <button class="btn ghost" id="btnInstall" data-i18n="install"></button>
       </div>
-      <button class="btn ghost" id="btnBackup" data-i18n="backup_btn"></button>
-      <div class="posrow">
-        <div class="lab" data-i18n="pos_label"></div>
-        <div class="chips poschips"></div>
+      <div class="btnrow">
+        <button class="btn ghost" id="btnBackup" data-i18n="backup_btn"></button>
+        <button class="btn ghost" id="btnSettings" data-i18n="set_btn"></button>
       </div>
       <select id="langSel" aria-label="Language"></select>
     </div>
@@ -471,6 +518,34 @@
     </div>
   </div>
 
+  <!-- Ajustes -->
+  <div class="overlay" id="ovSettings">
+    <div class="card">
+      <h3 data-i18n="set_title"></h3>
+      <div class="prev">
+        <span class="num pv">3</span><span class="num pv">7</span><span class="num pv gold">9</span><span class="num pv wild">?</span>
+      </div>
+      <div class="posrow">
+        <div class="lab" data-i18n="pos_label"></div>
+        <div class="chips poschips"></div>
+      </div>
+      <div class="posrow">
+        <div class="lab" data-i18n="hand_label"></div>
+        <div class="chips" id="handChips"></div>
+      </div>
+      <div class="posrow">
+        <div class="lab" data-i18n="size_label"></div>
+        <div class="chips" id="sizeChips"></div>
+      </div>
+      <div class="posrow">
+        <div class="lab" data-i18n="cb_label"></div>
+        <div class="chips" id="cbChips"></div>
+      </div>
+      <button class="btn ghost" id="btnTutAgain" data-i18n="tut_replay"></button>
+      <button class="btn" id="btnSettingsClose" data-i18n="close"></button>
+    </div>
+  </div>
+
   <!-- Copia de seguridad -->
   <div class="overlay" id="ovBackup">
     <div class="card">
@@ -520,10 +595,13 @@
   const GOALS = [5, 10, 20]; // objetivos semanales posibles (partidas)
   const BACKUP_DAYS = 14;    // días tras los que se recuerda hacer una copia
   const MAX_GOAL = 50;       // tope de números a comer para pasar de nivel
+  const MIN_DIGIT_N = 8;     // muestras mínimas por dígito para mostrar su media
   const POS_KEYS = ['low', 'mid', 'high'];   // posición de los botones: baja, media, alta
+  const NSIZES = [21, 27, 33];               // tamaño de la cifra de los números (px)
+  const TUT = { n1: 3, n2: 7 };              // números del tutorial
 
   // Curva de dificultad: multiplicador de velocidad según el nivel
-  //   niveles 1-5: +0,25 por nivel · niveles 6-15: +0,08 por nivel · a partir del 15: +0,03 por nivel
+  //   niveles 1-5: +0,25 por nivel · niveles 6-15: +0,05 por nivel · a partir del 15: +0,02 por nivel
   function speedFactor(L) {
     if (L <= 5) return 1 + 0.25 * (L - 1);
     if (L <= 15) return 2 + 0.05 * (L - 5);
@@ -603,6 +681,7 @@
   ];
 
   // ---------- Temas de color ----------
+  // Los temas con "season" solo están disponibles durante su temporada.
   const THEMES = [
     { id: 'classic', req: null, num: ['#ff7b54', '#ffb347'],
       pal: [['#667eea', '#764ba2'], ['#f093fb', '#f5576c'], ['#4facfe', '#00a8c8'], ['#43e97b', '#1ba39c'],
@@ -620,21 +699,58 @@
     { id: 'neon', req: 'streak25', num: ['#00f260', '#0575e6'],
       pal: [['#0f0c29', '#302b63'], ['#000000', '#434343'], ['#200122', '#6f0000'], ['#0f0c29', '#24243e']] },
     { id: 'gold', req: 'level10', num: ['#f9d423', '#e65c00'],
-      pal: [['#232526', '#b8860b'], ['#3a1c71', '#d76d77'], ['#7a4b00', '#f7971e'], ['#42275a', '#734b6d']] }
+      pal: [['#232526', '#b8860b'], ['#3a1c71', '#d76d77'], ['#7a4b00', '#f7971e'], ['#42275a', '#734b6d']] },
+    { id: 'xmas', season: 'xmas', icon: '🎄', req: null, num: ['#e53935', '#b71c1c'],
+      deco: ['❄️', '❄️', '🎄', '⭐', '❄️'], dir: 'fall',
+      pal: [['#0b2545', '#13315c'], ['#0f4c3a', '#1b7f5c'], ['#1a1a40', '#3c3c78'], ['#0b3d2e', '#14532d']] },
+    { id: 'summer', season: 'summer', icon: '☀️', req: null, num: ['#7b2ff7', '#f107a3'],
+      deco: ['☀️', '🍉', '🌴', '🐚'], dir: 'rise',
+      pal: [['#0093e9', '#2bb6a8'], ['#ff7e5f', '#f9a24b'], ['#00b4db', '#0083b0'], ['#f7971e', '#ff512f']] },
+    { id: 'autumn', season: 'autumn', icon: '🍂', req: null, num: ['#2e7d32', '#66bb6a'],
+      deco: ['🍂', '🍁', '🍂'], dir: 'fall',
+      pal: [['#7b3f00', '#d2691e'], ['#4e342e', '#bf360c'], ['#6d4c41', '#e08a00'], ['#3e2723', '#8d6e63']] },
+    { id: 'spring', season: 'spring', icon: '🌸', req: null, num: ['#8e24aa', '#ec407a'],
+      deco: ['🌸', '🌼', '🦋', '🌸'], dir: 'fall',
+      pal: [['#2e9d57', '#7bd88f'], ['#d6407a', '#f48fb1'], ['#2fa3a0', '#7fd6c0'], ['#e5733f', '#f2a65a']] }
   ];
+
+  // ---------- Temporadas ----------
+  // Meses (0 = enero): Navidad en diciembre, verano en julio y agosto, otoño en octubre, primavera en abril
+  const SEASONS = { xmas: [11], summer: [6, 7], autumn: [9], spring: [3] };
+  const _fs = new URLSearchParams(location.search).get('season');
+  const SEASON_FORCED = !!(_fs && SEASONS[_fs]);   // ?season=xmas para probar un tema (no se guarda)
+  const SEASON = (function () {
+    if (SEASON_FORCED) return _fs;
+    const m = new Date().getMonth();
+    for (const k in SEASONS) if (SEASONS[k].includes(m)) return k;
+    return null;
+  })();
 
   // ---------- Guardado local ----------
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   function jsonGet(k, d) { try { const v = JSON.parse(lsGet(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function fixArr(a, int) {   // 10 valores numéricos seguros (para las estadísticas por dígito)
+    const r = [];
+    for (let i = 0; i < 10; i++) {
+      const v = Array.isArray(a) ? nz(a[i], int ? 1e9 : 1e13) : 0;
+      r.push(int ? Math.floor(v) : v);
+    }
+    return r;
+  }
 
   let best = parseInt(lsGet('comenum_best')) || 0;
   let maxLevel = Math.max(1, parseInt(lsGet('comenum_maxlevel')) || 1);
   let muted = lsGet('comenum_mute') === '1';
   let startLevel = 1;
   let pos = POS_KEYS.includes(lsGet('comenum_pos')) ? lsGet('comenum_pos') : 'mid';
+  let lefty = lsGet('comenum_lefty') === '1';
+  let nsize = ['0', '1', '2'].includes(lsGet('comenum_nsize')) ? parseInt(lsGet('comenum_nsize')) : 0;
+  let cbMode = lsGet('comenum_cb') === '1';
   let stats = Object.assign({ eaten: 0, games: 0, gold: 0, wild: 0, streak: 0,
                               rn: 0, rsum: 0, rbest: 0, ok: 0, bad: 0, daily: 0, weeksDone: 0 }, jsonGet('comenum_stats', {}));
+  stats.dn = fixArr(stats.dn, true);    // nº de aciertos con medición, por dígito
+  stats.ds = fixArr(stats.ds, false);   // suma de tiempos de reacción (ms), por dígito
   let days = Object.assign({ last: '', streak: 0, best: 0, total: 0 }, jsonGet('comenum_days', {}));
   let weeks = jsonGet('comenum_weeks', {});
   if (!weeks || typeof weeks !== 'object' || Array.isArray(weeks)) weeks = {};
@@ -642,10 +758,30 @@
   let goal = GOALS.includes(parseInt(lsGet('comenum_goal'))) ? parseInt(lsGet('comenum_goal')) : 10;
   const unlocked = new Set((() => { const a = jsonGet('comenum_ach', []); return Array.isArray(a) ? a : []; })());
   let themeId = lsGet('comenum_theme') || 'classic';
+  let tutDone = lsGet('comenum_tut') === '1' || stats.games > 0 || best > 0;   // quien ya jugó no necesita tutorial
+  let tutNext = 'normal';
 
   const achById = id => ACHS.find(a => a.id === id);
-  const themeUnlocked = th => !th.req || unlocked.has(th.req);
+  const themeUnlocked = th => th.season ? th.season === SEASON : (!th.req || unlocked.has(th.req));
   const curTheme = () => THEMES.find(x => x.id === themeId) || THEMES[0];
+  const isSeasonalId = id => { const th = THEMES.find(x => x.id === id); return !!(th && th.season); };
+
+  // Tema de temporada: se activa solo la primera vez que se entra en la temporada
+  (function initSeason() {
+    if (SEASON) {
+      if (SEASON_FORCED) { themeId = SEASON; return; }
+      const key = SEASON + '-' + new Date().getFullYear();
+      if (lsGet('comenum_seasonseen') !== key) {
+        if (!isSeasonalId(themeId)) lsSet('comenum_theme_prev', themeId);
+        themeId = SEASON;
+        lsSet('comenum_theme', themeId);
+        lsSet('comenum_seasonseen', key);
+      }
+    } else if (isSeasonalId(themeId)) {
+      themeId = lsGet('comenum_theme_prev') || 'classic';
+      lsSet('comenum_theme', themeId);
+    }
+  })();
   if (!themeUnlocked(curTheme())) themeId = 'classic';
 
   function curWeek() {
@@ -750,10 +886,26 @@
       st_trend_down: `Esta semana vas algo más lento que la anterior. ¡Buen momento para recuperar el ritmo!`,
       st_trend_flat: `Mantienes un ritmo estable. ¡Sigue así!`,
       st_nodata: `Juega unas cuantas partidas y aquí verás cómo evolucionan tus reflejos.`,
+      st_digits: `Por dígito`,
+      st_digits_none: `Juega unas cuantas partidas más y aquí verás qué números te cuestan más.`,
+      st_digits_txt: `Más lento: el {s} ({ss}) · Más rápido: el {f} ({fs})`,
       tips: [`Cada partida es un mini entrenamiento de atención y reflejos. ¡La constancia marca la diferencia!`,
              `Fija la vista en el primer número y olvida el resto: así afinas tu concentración.`,
              `Jugar un poco cada día rinde más que jugar mucho un solo día.`,
              `Mientras comes un número, ve pensando en el siguiente: así entrenas tu memoria rápida.`],
+      tut1: `Este es el primer número (marcado en blanco). Con − y + pon el mismo número en el círculo amarillo.`,
+      tut2: `¡Muy bien! Ahora toca el círculo amarillo para comértelo.`,
+      tut3: `¡Otro más! Pon el mismo número con − y +, y cómetelo.`,
+      tut4: `¡Listo! Si un número llega al borde izquierdo pierdes una vida. ¡A por ello!`,
+      tut_wrong: `Primero pon el mismo número con − y +.`,
+      tut_skip: `Saltar`, tut_go: `▶ ¡A jugar!`, tut_replay: `🎓 Repetir tutorial`,
+      card_cta: `¿Puedes superarme?`, card_saved: `Imagen guardada ✓`,
+      set_btn: `⚙️ Ajustes`, set_title: `Ajustes`,
+      hand_label: `Mano de juego`, hand_r: `Diestro`, hand_l: `Zurdo (+ a la izquierda)`,
+      size_label: `Tamaño de los números`, size_n: `Normal`, size_l: `Grande`, size_xl: `Muy grande`,
+      cb_label: `Colores`, cb_off: `Clásicos`, cb_on: `Apto daltonismo`,
+      season_locked: `Disponible en {m}`, season_now: `Tema de temporada disponible: {n}`,
+      season_when: { xmas: `diciembre`, summer: `julio y agosto`, autumn: `octubre`, spring: `abril` },
       backup_btn: `💾 Copia de seguridad`, backup_title: `Copia de seguridad`,
       backup_intro: `Guarda tu progreso (récord, logros, estadísticas, rachas) en un código o archivo, y úsalo para recuperarlo o seguir en otro móvil u ordenador.`,
       backup_export: `1. Tu código de copia`, backup_copy: `📋 Copiar`, backup_copied: `¡Copiado! ✓`,
@@ -769,7 +921,8 @@
       backup_hint: `💾 Haz una copia de seguridad de tu progreso`,
       backup_share_text: `Mi copia de seguridad de Comenum:`,
       pos_label: `Posición de los botones`, pos_low: `Baja`, pos_mid: `Media`, pos_high: `Alta`,
-      themes: { classic: `Clásico`, ocean: `Océano`, sunset: `Atardecer`, forest: `Bosque`, candy: `Caramelo`, night: `Noche`, neon: `Neón`, gold: `Dorado` },
+      themes: { classic: `Clásico`, ocean: `Océano`, sunset: `Atardecer`, forest: `Bosque`, candy: `Caramelo`, night: `Noche`, neon: `Neón`, gold: `Dorado`,
+                xmas: `Navidad`, summer: `Verano`, autumn: `Otoño`, spring: `Primavera` },
       funny: [`¡Eres más lento que un caracol! 🐌`, `¡Debes entrenar más los pulgares! 👍`, `¡Mi abuela es más rápida! 👵`,
               `¿Estás dormido o qué? 😴`, `¡Hasta una tortuga te gana! 🐢`, `¡Necesitas más café! ☕`,
               `¡Los números se ríen de ti! 😂`, `¡Reflejos de perezoso! 🦥`, `¡Houston, tenemos un problema! 🚀`,
@@ -835,10 +988,26 @@
       st_trend_down: `You're a bit slower than last week. A good moment to get back into rhythm!`,
       st_trend_flat: `You're holding a steady pace. Keep it up!`,
       st_nodata: `Play a few games and you'll see here how your reflexes evolve.`,
+      st_digits: `By digit`,
+      st_digits_none: `Play a few more games and you'll see which numbers take you longest.`,
+      st_digits_txt: `Slowest: {s} ({ss}) · Fastest: {f} ({fs})`,
       tips: [`Every game is a mini workout for your attention and reflexes. Consistency makes the difference!`,
              `Keep your eyes on the first number and forget the rest: it sharpens your focus.`,
              `Playing a little every day beats playing a lot on a single day.`,
              `While you eat one number, think about the next: that trains your quick memory.`],
+      tut1: `This is the first number (outlined in white). Use − and + to set the same number in the yellow circle.`,
+      tut2: `Well done! Now tap the yellow circle to eat it.`,
+      tut3: `Another one! Set the same number with − and +, then eat it.`,
+      tut4: `Ready! If a number reaches the left edge you lose a life. Go for it!`,
+      tut_wrong: `First set the same number with − and +.`,
+      tut_skip: `Skip`, tut_go: `▶ Let's play!`, tut_replay: `🎓 Replay tutorial`,
+      card_cta: `Can you beat me?`, card_saved: `Image saved ✓`,
+      set_btn: `⚙️ Settings`, set_title: `Settings`,
+      hand_label: `Playing hand`, hand_r: `Right-handed`, hand_l: `Left-handed (+ on the left)`,
+      size_label: `Number size`, size_n: `Normal`, size_l: `Large`, size_xl: `Extra large`,
+      cb_label: `Colors`, cb_off: `Classic`, cb_on: `Colorblind-friendly`,
+      season_locked: `Available in {m}`, season_now: `Seasonal theme available: {n}`,
+      season_when: { xmas: `December`, summer: `July and August`, autumn: `October`, spring: `April` },
       backup_btn: `💾 Backup`, backup_title: `Backup`,
       backup_intro: `Save your progress (best score, achievements, statistics, streaks) as a code or file, and use it to restore it or continue on another phone or computer.`,
       backup_export: `1. Your backup code`, backup_copy: `📋 Copy`, backup_copied: `Copied! ✓`,
@@ -854,7 +1023,8 @@
       backup_hint: `💾 Back up your progress`,
       backup_share_text: `My Comenum backup:`,
       pos_label: `Button position`, pos_low: `Low`, pos_mid: `Medium`, pos_high: `High`,
-      themes: { classic: `Classic`, ocean: `Ocean`, sunset: `Sunset`, forest: `Forest`, candy: `Candy`, night: `Night`, neon: `Neon`, gold: `Gold` },
+      themes: { classic: `Classic`, ocean: `Ocean`, sunset: `Sunset`, forest: `Forest`, candy: `Candy`, night: `Night`, neon: `Neon`, gold: `Gold`,
+                xmas: `Christmas`, summer: `Summer`, autumn: `Autumn`, spring: `Spring` },
       funny: [`Slower than a snail! 🐌`, `Time to train those thumbs! 👍`, `My grandma is faster! 👵`,
               `Are you asleep? 😴`, `Even a turtle beats you! 🐢`, `You need more coffee! ☕`,
               `The numbers are laughing at you! 😂`, `Sloth reflexes! 🦥`]
@@ -919,10 +1089,26 @@
       st_trend_down: `Cette semaine tu es un peu plus lent que la précédente. C'est le moment de retrouver ton rythme !`,
       st_trend_flat: `Tu gardes un rythme stable. Continue !`,
       st_nodata: `Joue quelques parties et tu verras ici l'évolution de tes réflexes.`,
+      st_digits: `Par chiffre`,
+      st_digits_none: `Joue encore quelques parties et tu verras quels nombres te prennent le plus de temps.`,
+      st_digits_txt: `Le plus lent : {s} ({ss}) · Le plus rapide : {f} ({fs})`,
       tips: [`Chaque partie est un mini-entraînement pour ton attention et tes réflexes. La régularité fait la différence !`,
              `Garde les yeux sur le premier nombre et oublie le reste : ça aiguise ta concentration.`,
              `Jouer un peu chaque jour vaut mieux que beaucoup un seul jour.`,
              `Pendant que tu manges un nombre, pense au suivant : tu entraînes ta mémoire rapide.`],
+      tut1: `Voici le premier nombre (entouré de blanc). Avec − et +, mets le même nombre dans le cercle jaune.`,
+      tut2: `Bravo ! Touche maintenant le cercle jaune pour le manger.`,
+      tut3: `Encore un ! Mets le même nombre avec − et +, puis mange-le.`,
+      tut4: `C'est parti ! Si un nombre touche le bord gauche, tu perds une vie. Fonce !`,
+      tut_wrong: `Mets d'abord le même nombre avec − et +.`,
+      tut_skip: `Passer`, tut_go: `▶ On joue !`, tut_replay: `🎓 Refaire le tutoriel`,
+      card_cta: `Peux-tu me battre ?`, card_saved: `Image enregistrée ✓`,
+      set_btn: `⚙️ Réglages`, set_title: `Réglages`,
+      hand_label: `Main de jeu`, hand_r: `Droitier`, hand_l: `Gaucher (+ à gauche)`,
+      size_label: `Taille des nombres`, size_n: `Normale`, size_l: `Grande`, size_xl: `Très grande`,
+      cb_label: `Couleurs`, cb_off: `Classiques`, cb_on: `Adaptées au daltonisme`,
+      season_locked: `Disponible en {m}`, season_now: `Thème de saison disponible : {n}`,
+      season_when: { xmas: `décembre`, summer: `juillet et août`, autumn: `octobre`, spring: `avril` },
       backup_btn: `💾 Sauvegarde`, backup_title: `Sauvegarde`,
       backup_intro: `Enregistre ta progression (record, succès, statistiques, séries) dans un code ou un fichier pour la récupérer ou continuer sur un autre téléphone ou ordinateur.`,
       backup_export: `1. Ton code de sauvegarde`, backup_copy: `📋 Copier`, backup_copied: `Copié ! ✓`,
@@ -938,7 +1124,8 @@
       backup_hint: `💾 Fais une sauvegarde de ta progression`,
       backup_share_text: `Ma sauvegarde de Comenum :`,
       pos_label: `Position des boutons`, pos_low: `Basse`, pos_mid: `Moyenne`, pos_high: `Haute`,
-      themes: { classic: `Classique`, ocean: `Océan`, sunset: `Crépuscule`, forest: `Forêt`, candy: `Bonbon`, night: `Nuit`, neon: `Néon`, gold: `Or` },
+      themes: { classic: `Classique`, ocean: `Océan`, sunset: `Crépuscule`, forest: `Forêt`, candy: `Bonbon`, night: `Nuit`, neon: `Néon`, gold: `Or`,
+                xmas: `Noël`, summer: `Été`, autumn: `Automne`, spring: `Printemps` },
       funny: [`Plus lent qu'un escargot ! 🐌`, `Entraîne un peu plus tes pouces ! 👍`, `Ma grand-mère est plus rapide ! 👵`,
               `Tu dors ou quoi ? 😴`, `Même une tortue te bat ! 🐢`, `Il te faut plus de café ! ☕`,
               `Les nombres se moquent de toi ! 😂`, `Des réflexes de paresseux ! 🦥`]
@@ -1003,10 +1190,26 @@
       st_trend_down: `Diese Woche bist du etwas langsamer als letzte Woche. Zeit, wieder in Schwung zu kommen!`,
       st_trend_flat: `Du hältst ein gleichmäßiges Tempo. Weiter so!`,
       st_nodata: `Spiele ein paar Partien, dann siehst du hier, wie sich deine Reflexe entwickeln.`,
+      st_digits: `Pro Ziffer`,
+      st_digits_none: `Spiele noch ein paar Partien, dann siehst du, welche Zahlen dich am meisten Zeit kosten.`,
+      st_digits_txt: `Langsamste: {s} ({ss}) · Schnellste: {f} ({fs})`,
       tips: [`Jede Partie ist ein kleines Training für Aufmerksamkeit und Reflexe. Regelmäßigkeit macht den Unterschied!`,
              `Behalte die erste Zahl im Blick und vergiss den Rest: Das schärft deine Konzentration.`,
              `Jeden Tag ein bisschen zu spielen bringt mehr als an einem Tag sehr viel.`,
              `Denke schon an die nächste Zahl, während du die aktuelle isst: Das trainiert dein Kurzzeitgedächtnis.`],
+      tut1: `Das ist die erste Zahl (weiß umrandet). Stelle mit − und + dieselbe Zahl im gelben Kreis ein.`,
+      tut2: `Super! Tippe jetzt auf den gelben Kreis, um sie zu essen.`,
+      tut3: `Noch eine! Stelle dieselbe Zahl mit − und + ein und iss sie.`,
+      tut4: `Bereit! Wenn eine Zahl den linken Rand erreicht, verlierst du ein Leben. Los geht's!`,
+      tut_wrong: `Stelle zuerst mit − und + dieselbe Zahl ein.`,
+      tut_skip: `Überspringen`, tut_go: `▶ Los geht's!`, tut_replay: `🎓 Tutorial wiederholen`,
+      card_cta: `Kannst du mich schlagen?`, card_saved: `Bild gespeichert ✓`,
+      set_btn: `⚙️ Einstellungen`, set_title: `Einstellungen`,
+      hand_label: `Spielhand`, hand_r: `Rechtshänder`, hand_l: `Linkshänder (+ links)`,
+      size_label: `Zahlengröße`, size_n: `Normal`, size_l: `Groß`, size_xl: `Sehr groß`,
+      cb_label: `Farben`, cb_off: `Klassisch`, cb_on: `Farbenblind-freundlich`,
+      season_locked: `Verfügbar im {m}`, season_now: `Saisonales Thema verfügbar: {n}`,
+      season_when: { xmas: `Dezember`, summer: `Juli und August`, autumn: `Oktober`, spring: `April` },
       backup_btn: `💾 Sicherung`, backup_title: `Sicherung`,
       backup_intro: `Speichere deinen Fortschritt (Rekord, Erfolge, Statistiken, Serien) als Code oder Datei, um ihn wiederherzustellen oder auf einem anderen Handy oder Computer weiterzuspielen.`,
       backup_export: `1. Dein Sicherungscode`, backup_copy: `📋 Kopieren`, backup_copied: `Kopiert! ✓`,
@@ -1022,7 +1225,8 @@
       backup_hint: `💾 Sichere deinen Fortschritt`,
       backup_share_text: `Meine Comenum-Sicherung:`,
       pos_label: `Position der Tasten`, pos_low: `Unten`, pos_mid: `Mitte`, pos_high: `Oben`,
-      themes: { classic: `Klassisch`, ocean: `Ozean`, sunset: `Sonnenuntergang`, forest: `Wald`, candy: `Bonbon`, night: `Nacht`, neon: `Neon`, gold: `Gold` },
+      themes: { classic: `Klassisch`, ocean: `Ozean`, sunset: `Sonnenuntergang`, forest: `Wald`, candy: `Bonbon`, night: `Nacht`, neon: `Neon`, gold: `Gold`,
+                xmas: `Weihnachten`, summer: `Sommer`, autumn: `Herbst`, spring: `Frühling` },
       funny: [`Langsamer als eine Schnecke! 🐌`, `Trainiere mehr deine Daumen! 👍`, `Meine Oma ist schneller! 👵`,
               `Schläfst du? 😴`, `Sogar eine Schildkröte schlägt dich! 🐢`, `Du brauchst mehr Kaffee! ☕`,
               `Die Zahlen lachen dich aus! 😂`, `Faultier-Reflexe! 🦥`]
@@ -1087,10 +1291,26 @@
       st_trend_down: `Questa settimana sei un po' più lento della precedente. È il momento di ritrovare il ritmo!`,
       st_trend_flat: `Mantieni un ritmo stabile. Continua così!`,
       st_nodata: `Gioca qualche partita e qui vedrai come evolvono i tuoi riflessi.`,
+      st_digits: `Per cifra`,
+      st_digits_none: `Gioca ancora qualche partita e vedrai quali numeri ti richiedono più tempo.`,
+      st_digits_txt: `Più lento: {s} ({ss}) · Più veloce: {f} ({fs})`,
       tips: [`Ogni partita è un mini allenamento per attenzione e riflessi. La costanza fa la differenza!`,
              `Tieni gli occhi sul primo numero e dimentica il resto: affini la concentrazione.`,
              `Giocare un po' ogni giorno vale più che giocare tanto in un solo giorno.`,
              `Mentre mangi un numero, pensa al successivo: alleni la memoria rapida.`],
+      tut1: `Questo è il primo numero (cerchiato di bianco). Con − e + metti lo stesso numero nel cerchio giallo.`,
+      tut2: `Bravo! Ora tocca il cerchio giallo per mangiarlo.`,
+      tut3: `Un altro! Metti lo stesso numero con − e + e mangialo.`,
+      tut4: `Pronto! Se un numero tocca il bordo sinistro perdi una vita. Via!`,
+      tut_wrong: `Prima metti lo stesso numero con − e +.`,
+      tut_skip: `Salta`, tut_go: `▶ Si gioca!`, tut_replay: `🎓 Ripeti il tutorial`,
+      card_cta: `Riesci a battermi?`, card_saved: `Immagine salvata ✓`,
+      set_btn: `⚙️ Impostazioni`, set_title: `Impostazioni`,
+      hand_label: `Mano di gioco`, hand_r: `Destrimane`, hand_l: `Mancino (+ a sinistra)`,
+      size_label: `Dimensione dei numeri`, size_n: `Normale`, size_l: `Grande`, size_xl: `Molto grande`,
+      cb_label: `Colori`, cb_off: `Classici`, cb_on: `Adatti al daltonismo`,
+      season_locked: `Disponibile: {m}`, season_now: `Tema di stagione disponibile: {n}`,
+      season_when: { xmas: `dicembre`, summer: `luglio e agosto`, autumn: `ottobre`, spring: `aprile` },
       backup_btn: `💾 Copia di sicurezza`, backup_title: `Copia di sicurezza`,
       backup_intro: `Salva i tuoi progressi (record, traguardi, statistiche, serie) in un codice o in un file per recuperarli o continuare su un altro telefono o computer.`,
       backup_export: `1. Il tuo codice di backup`, backup_copy: `📋 Copia`, backup_copied: `Copiato! ✓`,
@@ -1106,7 +1326,8 @@
       backup_hint: `💾 Fai una copia di sicurezza dei tuoi progressi`,
       backup_share_text: `Il mio backup di Comenum:`,
       pos_label: `Posizione dei pulsanti`, pos_low: `Bassa`, pos_mid: `Media`, pos_high: `Alta`,
-      themes: { classic: `Classico`, ocean: `Oceano`, sunset: `Tramonto`, forest: `Foresta`, candy: `Caramella`, night: `Notte`, neon: `Neon`, gold: `Oro` },
+      themes: { classic: `Classico`, ocean: `Oceano`, sunset: `Tramonto`, forest: `Foresta`, candy: `Caramella`, night: `Notte`, neon: `Neon`, gold: `Oro`,
+                xmas: `Natale`, summer: `Estate`, autumn: `Autunno`, spring: `Primavera` },
       funny: [`Più lento di una lumaca! 🐌`, `Devi allenare di più i pollici! 👍`, `Mia nonna è più veloce! 👵`,
               `Dormi o cosa? 😴`, `Anche una tartaruga ti batte! 🐢`, `Ti serve più caffè! ☕`,
               `I numeri ridono di te! 😂`, `Riflessi da bradipo! 🦥`]
@@ -1171,10 +1392,26 @@
       st_trend_down: `Esta semana você está um pouco mais lento que na anterior. Bom momento para retomar o ritmo!`,
       st_trend_flat: `Você mantém um ritmo estável. Continue assim!`,
       st_nodata: `Jogue algumas partidas e aqui você verá como seus reflexos evoluem.`,
+      st_digits: `Por dígito`,
+      st_digits_none: `Jogue mais algumas partidas e você verá quais números levam mais tempo.`,
+      st_digits_txt: `Mais lento: {s} ({ss}) · Mais rápido: {f} ({fs})`,
       tips: [`Cada partida é um mini treino de atenção e reflexos. A constância faz a diferença!`,
              `Mantenha os olhos no primeiro número e esqueça o resto: isso afina sua concentração.`,
              `Jogar um pouco todo dia rende mais do que jogar muito em um único dia.`,
              `Enquanto come um número, pense no próximo: assim você treina a memória rápida.`],
+      tut1: `Este é o primeiro número (contornado de branco). Com − e + coloque o mesmo número no círculo amarelo.`,
+      tut2: `Muito bem! Agora toque no círculo amarelo para comê-lo.`,
+      tut3: `Mais um! Coloque o mesmo número com − e + e coma-o.`,
+      tut4: `Pronto! Se um número tocar a borda esquerda, você perde uma vida. Vamos!`,
+      tut_wrong: `Primeiro coloque o mesmo número com − e +.`,
+      tut_skip: `Pular`, tut_go: `▶ Vamos jogar!`, tut_replay: `🎓 Repetir tutorial`,
+      card_cta: `Consegue me superar?`, card_saved: `Imagem salva ✓`,
+      set_btn: `⚙️ Ajustes`, set_title: `Ajustes`,
+      hand_label: `Mão de jogo`, hand_r: `Destro`, hand_l: `Canhoto (+ à esquerda)`,
+      size_label: `Tamanho dos números`, size_n: `Normal`, size_l: `Grande`, size_xl: `Muito grande`,
+      cb_label: `Cores`, cb_off: `Clássicas`, cb_on: `Para daltonismo`,
+      season_locked: `Disponível em {m}`, season_now: `Tema de temporada disponível: {n}`,
+      season_when: { xmas: `dezembro`, summer: `julho e agosto`, autumn: `outubro`, spring: `abril` },
       backup_btn: `💾 Cópia de segurança`, backup_title: `Cópia de segurança`,
       backup_intro: `Guarde seu progresso (recorde, conquistas, estatísticas, sequências) em um código ou arquivo para recuperá-lo ou continuar em outro celular ou computador.`,
       backup_export: `1. Seu código de backup`, backup_copy: `📋 Copiar`, backup_copied: `Copiado! ✓`,
@@ -1190,7 +1427,8 @@
       backup_hint: `💾 Faça uma cópia de segurança do seu progresso`,
       backup_share_text: `Meu backup do Comenum:`,
       pos_label: `Posição dos botões`, pos_low: `Baixa`, pos_mid: `Média`, pos_high: `Alta`,
-      themes: { classic: `Clássico`, ocean: `Oceano`, sunset: `Pôr do sol`, forest: `Floresta`, candy: `Doce`, night: `Noite`, neon: `Neon`, gold: `Ouro` },
+      themes: { classic: `Clássico`, ocean: `Oceano`, sunset: `Pôr do sol`, forest: `Floresta`, candy: `Doce`, night: `Noite`, neon: `Neon`, gold: `Ouro`,
+                xmas: `Natal`, summer: `Verão`, autumn: `Outono`, spring: `Primavera` },
       funny: [`Mais lento que uma lesma! 🐌`, `Treine mais esses polegares! 👍`, `Minha avó é mais rápida! 👵`,
               `Está dormindo? 😴`, `Até uma tartaruga ganha de você! 🐢`, `Você precisa de mais café! ☕`,
               `Os números estão rindo de você! 😂`, `Reflexos de preguiça! 🦥`]
@@ -1221,6 +1459,7 @@
     $('bkIn').placeholder = t('backup_paste');
     $('langSel').value = lang;
     renderPosChips();
+    renderSettings();
     updateScoreLabel();
     refreshStart();
   }
@@ -1348,12 +1587,32 @@
     const c = pal[(level - 1) % pal.length];
     document.body.style.background = `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
   }
+  function applyDeco() {   // adornos flotantes de los temas de temporada
+    const box = $('deco');
+    box.innerHTML = '';
+    const th = curTheme();
+    if (!th.deco) return;
+    for (let i = 0; i < 9; i++) {
+      const e = mk('span', 'dp' + (th.dir === 'rise' ? ' rise' : ''), th.deco[i % th.deco.length]);
+      e.style.left = (Math.random() * 96) + '%';
+      e.style.fontSize = (14 + Math.random() * 14) + 'px';
+      e.style.animationDuration = (11 + Math.random() * 9) + 's';
+      e.style.animationDelay = (-Math.random() * 18) + 's';
+      box.appendChild(e);
+    }
+  }
   function applyTheme() {
     const th = curTheme();
     const r = document.documentElement.style;
     r.setProperty('--n1', th.num[0]);
     r.setProperty('--n2', th.num[1]);
     setBackground(S.playing ? S.level : 1);
+    applyDeco();
+  }
+  function applyAccess() {   // mano de juego, tamaño de los números y modo daltonismo
+    document.querySelector('.controls').classList.toggle('lefty', lefty);
+    document.documentElement.style.setProperty('--nf', NSIZES[nsize] + 'px');
+    document.body.classList.toggle('cb', cbMode);
   }
   function toast(msg, cls) {
     const el = $('toast');
@@ -1390,6 +1649,12 @@
     }
   }
   let peekTimer = null;
+  function peekOverlay(ov) {   // la ventana se vuelve casi transparente un momento para ver el juego de fondo
+    if (!ov) return;
+    ov.classList.add('peek');
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(() => ov.classList.remove('peek'), 1500);
+  }
   function setPos(p, overlay) {
     pos = p;
     lsSet('comenum_pos', p);
@@ -1397,12 +1662,7 @@
     renderPosChips();
     sfx('button');
     track('pos/' + p, 'Posición botones ' + p);
-    // La ventana se vuelve casi transparente un momento para ver dónde queda la botonera
-    if (overlay) {
-      overlay.classList.add('peek');
-      clearTimeout(peekTimer);
-      peekTimer = setTimeout(() => overlay.classList.remove('peek'), 1500);
-    }
+    peekOverlay(overlay);
   }
   function renderPosChips() {
     document.querySelectorAll('.poschips').forEach(box => {
@@ -1412,6 +1672,34 @@
         c.addEventListener('click', () => setPos(k, box.closest('.overlay')));
         box.appendChild(c);
       });
+    });
+  }
+
+  // ---------- Ajustes (mano, tamaño, colores) ----------
+  function fillChips(box, items, cur, onPick) {
+    box.innerHTML = '';
+    items.forEach(it => {
+      const c = mk('button', 'chip' + (it[0] === cur ? ' sel' : ''), it[1]);
+      c.addEventListener('click', () => onPick(it[0]));
+      box.appendChild(c);
+    });
+  }
+  function renderSettings() {
+    fillChips($('handChips'), [['0', t('hand_r')], ['1', t('hand_l')]], lefty ? '1' : '0', v => {
+      lefty = v === '1'; lsSet('comenum_lefty', v);
+      applyAccess(); renderSettings(); sfx('button');
+      track('set/hand-' + v, 'Mano ' + v);
+      peekOverlay($('ovSettings'));
+    });
+    fillChips($('sizeChips'), [['0', t('size_n')], ['1', t('size_l')], ['2', t('size_xl')]], String(nsize), v => {
+      nsize = parseInt(v, 10); lsSet('comenum_nsize', v);
+      applyAccess(); renderSettings(); sfx('button');
+      track('set/size-' + v, 'Tamaño ' + v);
+    });
+    fillChips($('cbChips'), [['0', t('cb_off')], ['1', t('cb_on')]], cbMode ? '1' : '0', v => {
+      cbMode = v === '1'; lsSet('comenum_cb', v);
+      applyAccess(); renderSettings(); sfx('button');
+      track('set/cb-' + v, 'Daltonismo ' + v);
     });
   }
 
@@ -1427,6 +1715,14 @@
     const wk = weeks[weekKey()];
     parts.push(t('info_week', { g: wk ? wk.games : 0, n: goal }));
     $('startInfo').textContent = parts.join('  ·  ');
+    const sm = $('seasonMsg');
+    const sth = THEMES.find(x => x.season === SEASON);
+    if (sth) {
+      sm.textContent = sth.icon + ' ' + t('season_now', { n: T.themes[sth.id] });
+      sm.classList.remove('hidden');
+    } else {
+      sm.classList.add('hidden');
+    }
     const doneToday = dailyRec.date === dateKey() && dailyRec.plays > 0;
     $('dailySub').textContent = doneToday ? t('daily_done', { s: dailyRec.best }) : t('daily_todo');
     const b = $('chBanner');
@@ -1515,10 +1811,12 @@
       sw.style.background = `linear-gradient(135deg, ${th.pal[0][0]}, ${th.pal[0][1]})`;
       const tx = document.createElement('span');
       tx.className = 'tx';
-      tx.textContent = T.themes[th.id];
+      tx.textContent = (th.icon ? th.icon + ' ' : '') + T.themes[th.id];
       if (!ok) {
         const sm = document.createElement('small');
-        sm.textContent = achText(achById(th.req));
+        sm.textContent = th.season
+          ? t('season_locked', { m: (T.season_when || I18N.en.season_when)[th.season] })
+          : achText(achById(th.req));
         tx.appendChild(sm);
       }
       const st = document.createElement('span');
@@ -1556,6 +1854,36 @@
   function weekLabel(k) {
     const p = k.split('-').map(Number);
     return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString(lang, { day: '2-digit', month: '2-digit' });
+  }
+  function renderDigits(box) {
+    box.appendChild(mk('div', 'sec', '🔢 ' + t('st_digits')));
+    const avgs = [];
+    let have = 0;
+    for (let d = 0; d < 10; d++) {
+      const n = stats.dn[d];
+      const ok = n >= MIN_DIGIT_N;
+      avgs.push(ok ? stats.ds[d] / n : 0);
+      if (ok) have++;
+    }
+    if (have < 5) { box.appendChild(mk('p', 'info', t('st_digits_none'))); return; }
+    let slow = -1, fast = -1, mx = 0;
+    avgs.forEach((a, d) => {
+      if (a <= 0) return;
+      if (a > mx) mx = a;
+      if (slow < 0 || a > avgs[slow]) slow = d;
+      if (fast < 0 || a < avgs[fast]) fast = d;
+    });
+    const chart = mk('div', 'dig');
+    for (let d = 0; d < 10; d++) {
+      const col = mk('div', 'c' + (d === slow ? ' slow' : (d === fast ? ' fast' : '')));
+      const bar = document.createElement('i');
+      bar.style.height = (avgs[d] > 0 ? Math.round(12 + (avgs[d] / mx) * 50) : 4) + 'px';
+      col.appendChild(bar);
+      col.appendChild(mk('b', '', String(d)));
+      chart.appendChild(col);
+    }
+    box.appendChild(chart);
+    box.appendChild(mk('p', 'info', t('st_digits_txt', { s: slow, ss: fmtSec(avgs[slow]), f: fast, fs: fmtSec(avgs[fast]) })));
   }
   function renderStats() {
     const box = $('statsBody');
@@ -1632,6 +1960,9 @@
         box.appendChild(mk('div', 'tip', p >= 3 ? t('st_trend_up', { p: p }) : (p <= -3 ? t('st_trend_down') : t('st_trend_flat'))));
       }
     }
+
+    // Reacción por dígito
+    renderDigits(box);
   }
 
   // ---------- Copia de seguridad (exportar / importar) ----------
@@ -1687,6 +2018,12 @@
     if (irn > (stats.rn || 0)) { stats.rn = irn; stats.rsum = nz(is.rsum); }   // se queda el conjunto con más muestras
     const irb = nz(is.rbest, MAX_REACT);
     if (irb > 0 && (!stats.rbest || irb < stats.rbest)) stats.rbest = irb;
+    // Reacción por dígito: por cada dígito se queda el conjunto con más muestras
+    const idn = Array.isArray(is.dn) ? is.dn : [], ids = Array.isArray(is.ds) ? is.ds : [];
+    for (let d = 0; d < 10; d++) {
+      const n2 = Math.floor(nz(idn[d], 1e9));
+      if (n2 > stats.dn[d]) { stats.dn[d] = n2; stats.ds[d] = nz(ids[d], 1e13); }
+    }
 
     const id = (o.days && typeof o.days === 'object') ? o.days : {};
     const il = (typeof id.last === 'string' && DATE_RE.test(id.last)) ? id.last : '';
@@ -1861,6 +2198,106 @@
     S.numbers.forEach(n => n.el.remove());
     S.numbers = [];
   }
+  function paintNumbers() {
+    S.numbers.forEach((n, i) => {
+      n.el.style.transform = 'translateX(' + n.x.toFixed(1) + 'px)';
+      n.el.classList.toggle('first', i === 0);
+    });
+  }
+
+  // ---------- Tutorial ----------
+  function tutHint(text, showBtn) {
+    $('tutHint').classList.remove('hidden');
+    $('tutText').textContent = text;
+    $('tutNext').classList.toggle('hidden', !showBtn);
+  }
+  function tutHighlight(ids) {
+    ['minus', 'plus', 'display'].forEach(id => $(id).classList.toggle('hl', ids.indexOf(id) >= 0));
+  }
+  function tutNumber(v) {
+    const el = document.createElement('div');
+    el.className = 'num';
+    el.textContent = v;
+    $('strip').appendChild(el);
+    S.numbers.push({ v: v, x: 14, el: el, kind: 'normal' });
+    paintNumbers();
+  }
+  function startTutorial() {
+    ensureAudio();
+    stopMusic();
+    clearNumbers();
+    S.surprises.forEach(s => s.el.remove());
+    S = newState(1, 'tutorial', 'tutorial');
+    S.playing = true;
+    S.tut = 1;   // 1: poner el número · 2: comerlo · 3: poner el segundo · 4: comerlo · 5: fin
+    $('time').textContent = '00:00';
+    $('effect').textContent = '';
+    setBackground(1);
+    updateScoreLabel();
+    hud();
+    ['ovStart', 'ovOver', 'ovPause', 'ovAch', 'ovStats', 'ovBackup', 'ovSettings', 'ovHelp'].forEach(close);
+    tutNumber(TUT.n1);
+    tutHighlight(['minus', 'plus']);
+    tutHint(t('tut1'));
+    track('tutorial-start', 'Tutorial');
+  }
+  function tutCheck() {   // se llama tras cambiar el número del visor
+    const n = S.numbers[0];
+    if (!n) return;
+    const match = S.player === n.v;
+    if (S.tut === 1 || S.tut === 2) S.tut = match ? 2 : 1;
+    else if (S.tut === 3 || S.tut === 4) S.tut = match ? 4 : 3;
+    else return;
+    const eatStep = (S.tut === 2 || S.tut === 4);
+    tutHighlight(eatStep ? ['display'] : ['minus', 'plus']);
+    tutHint(eatStep ? t('tut2') : (S.tut === 1 ? t('tut1') : t('tut3')));
+  }
+  function tutEat() {
+    const n = S.numbers[0];
+    if (!n) return;
+    const d = $('display');
+    d.classList.remove('ok', 'bad'); void d.offsetWidth;
+    if (n.v === S.player) {
+      removeNumber(0);
+      sfx('eat');
+      d.classList.add('ok');
+      popPoints('+10');
+      if (S.tut === 2) {
+        S.tut = 3;
+        tutNumber(TUT.n2);
+        tutHighlight(['minus', 'plus']);
+        tutHint(t('tut3'));
+      } else {
+        S.tut = 5;
+        tutHighlight([]);
+        tutHint(t('tut4'), true);
+      }
+    } else {
+      sfx('wrong'); vibrate(40);
+      d.classList.add('bad');
+      tutHint(t('tut_wrong'));
+    }
+  }
+  function endTutorial() {
+    lsSet('comenum_tut', '1');
+    tutDone = true;
+    $('tutHint').classList.add('hidden');
+    tutHighlight([]);
+    clearNumbers();
+    const next = tutNext;
+    tutNext = 'normal';
+    if (next === 'menu') {
+      S = newState(1, 'normal', 'x');
+      setBackground(1); updateScoreLabel(); hud(); refreshStart();
+      open('ovStart');
+    } else {
+      startGame(next);
+    }
+  }
+  function begin(mode) {   // la primera vez se pasa por el tutorial
+    if (!tutDone) { tutNext = mode; startTutorial(); }
+    else startGame(mode);
+  }
 
   // ---------- Reglas ----------
   // Da los puntos de un número comido. viaEat = true si se comió con el visor (suma racha).
@@ -1898,7 +2335,7 @@
       toast(t('ch_passed'), 'good');
     }
   }
-  function recordHit(ms) {
+  function recordHit(ms, digit) {
     S.ok++; stats.ok++;
     const w = curWeek();
     w.ok++;
@@ -1907,6 +2344,7 @@
       S.rn++; S.rsum += ms; if (!S.rbest || ms < S.rbest) S.rbest = ms;
       stats.rn++; stats.rsum += ms; if (!stats.rbest || ms < stats.rbest) stats.rbest = ms;
       w.n++; w.sum += ms;
+      if (digit >= 0 && digit <= 9) { stats.dn[digit]++; stats.ds[digit] += ms; }
     }
     if (S.ok === 1) touchDay();
   }
@@ -1916,6 +2354,7 @@
   }
   function eat() {
     if (!S.playing || S.paused) return;
+    if (S.mode === 'tutorial') { tutEat(); return; }
     const n = S.numbers[0];
     if (!n) return;   // no hay nada que comer: no cuenta como fallo
     const d = $('display');
@@ -1926,7 +2365,7 @@
       const before = mult();
       const pts = awardNumber(n, true);
       const after = mult();
-      recordHit(ms);
+      recordHit(ms, n.kind === 'wild' ? -1 : n.v);
       sfx(n.kind === 'gold' ? 'gold' : 'eat');
       if (after > before) sfx('combo');
       d.classList.add('ok');
@@ -1949,6 +2388,7 @@
     S.player = (S.player + delta + 10) % 10;
     sfx('button'); vibrate(20);
     hud();
+    if (S.mode === 'tutorial') tutCheck();
   }
   function loseLife() {
     S.lives--;
@@ -2034,6 +2474,7 @@
     const dt = Math.min((ts - last) / 1000, 0.1);
     last = ts;
     if (!S.playing || S.paused) return;
+    if (S.mode === 'tutorial') { paintNumbers(); return; }
 
     S.time += dt;
     const sec = Math.floor(S.time);
@@ -2073,10 +2514,7 @@
     }
 
     // Pintar
-    S.numbers.forEach((n, i) => {
-      n.el.style.transform = 'translateX(' + n.x.toFixed(1) + 'px)';
-      n.el.classList.toggle('first', i === 0);
-    });
+    paintNumbers();
 
     // Sorpresas
     S.nextSurprise -= dt;
@@ -2090,6 +2528,8 @@
   // ---------- Flujo de partida ----------
   function startGame(mode) {
     ensureAudio();
+    $('tutHint').classList.add('hidden');
+    tutHighlight([]);
     clearNumbers();
     S.surprises.forEach(s => s.el.remove());
     let lv = 1, seed, target = 0;
@@ -2113,7 +2553,7 @@
     setBackground(S.level);
     updateScoreLabel();
     hud();
-    ['ovStart', 'ovOver', 'ovPause', 'ovAch', 'ovStats', 'ovBackup'].forEach(close);
+    ['ovStart', 'ovOver', 'ovPause', 'ovAch', 'ovStats', 'ovBackup', 'ovSettings'].forEach(close);
     startMusic();
     track(mode === 'normal' ? 'game-start' : 'game-start/' + mode, 'Partida iniciada (' + mode + ')');
   }
@@ -2194,6 +2634,8 @@
     msgs.slice(0, 4).forEach(m => box.appendChild(mk('p', '', m)));
 
     $('btnChallenge').classList.toggle('hidden', S.score <= 0);
+    $('btnShareOver').innerHTML = t('share_score');
+    prepareCard();
     open('ovOver');
     track('game-over/level-' + S.level, 'Fin de partida en nivel ' + S.level);
   }
@@ -2203,7 +2645,7 @@
     if (maxLevel > 1 || S.mode !== 'normal') {
       open('ovStart');   // permite elegir el nivel de inicio
     } else {
-      startGame('normal');
+      begin('normal');
     }
   }
   function goMenu() {
@@ -2231,7 +2673,10 @@
   }
 
   // ---------- Compartir ----------
-  const baseUrl = () => location.href.split('#')[0];
+  const baseUrl = () => (location.protocol.indexOf('http') === 0)
+    ? location.origin + location.pathname
+    : location.href.split('#')[0].split('?')[0];
+  const shortUrl = () => (location.host + location.pathname).replace(/index\.html$/, '').replace(/\/$/, '');
   async function doShare(text, url, evt) {
     track(evt, evt);
     if (navigator.share) {
@@ -2243,15 +2688,133 @@
   function shareStart() {
     doShare(best > 0 ? t('share_text_score', { s: best }) : t('share_text'), baseUrl(), 'share');
   }
-  function shareScore() {
-    const text = S.mode === 'daily'
-      ? t('daily_share_text', { n: dayNumber(), s: S.score, l: S.level })
-      : t('share_text_score', { s: S.score });
-    doShare(text, baseUrl(), 'share');
-  }
   function shareChallenge() {
     const url = baseUrl() + '#c=' + S.seed + '.' + S.score + '.' + S.startLv;
     doShare(t('ch_text', { s: S.score }), url, 'challenge-share');
+  }
+
+  // Tarjeta de resultado (imagen)
+  function rr(x, X, Y, W, H, R) {   // rectángulo redondeado
+    x.beginPath();
+    x.moveTo(X + R, Y);
+    x.arcTo(X + W, Y, X + W, Y + H, R);
+    x.arcTo(X + W, Y + H, X, Y + H, R);
+    x.arcTo(X, Y + H, X, Y, R);
+    x.arcTo(X, Y, X + W, Y, R);
+    x.closePath();
+  }
+  function drawCard() {
+    const W = 1080, H = 1350;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    const th = curTheme();
+    const col = th.pal[(S.level - 1) % th.pal.length];
+    const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+    const g = x.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, col[0]); g.addColorStop(1, col[1]);
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.fillStyle = 'rgba(255,255,255,.07)';
+    [[160, 220, 230], [950, 430, 170], [180, 1120, 210], [920, 1190, 250]].forEach(a => {
+      x.beginPath(); x.arc(a[0], a[1], a[2], 0, Math.PI * 2); x.fill();
+    });
+    x.textAlign = 'center';
+    x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 14; x.shadowOffsetY = 5;
+    x.fillStyle = '#fff'; x.font = '900 128px ' + FONT;
+    x.fillText('Comenum', W / 2, 190);
+    let tag = '';
+    if (S.mode === 'daily') tag = t('daily_tag') + ' #' + dayNumber();
+    else if (S.mode === 'challenge' && S.target > 0) tag = t('ch_tag', { s: S.target });
+    if (tag) { x.font = '700 54px ' + FONT; x.fillText(tag, W / 2, 270); }
+    const sc = String(S.score);
+    let fs = 300;
+    x.font = '900 ' + fs + 'px ' + FONT;
+    while (x.measureText(sc).width > 900 && fs > 110) { fs -= 10; x.font = '900 ' + fs + 'px ' + FONT; }
+    x.fillStyle = '#ffd23f';
+    x.fillText(sc, W / 2, 640);
+    x.shadowColor = 'transparent'; x.shadowBlur = 0; x.shadowOffsetY = 0;
+    x.fillStyle = 'rgba(255,255,255,.92)'; x.font = '700 50px ' + FONT;
+    x.fillText(t('score').toUpperCase(), W / 2, 725);
+    const items = [
+      [t('level'), String(S.level)],
+      [t('streak_best'), String(S.bestStreak)],
+      [t('go_react'), S.rn > 0 ? fmtSec(S.rsum / S.rn) : '—']
+    ];
+    items.forEach((it, i) => {
+      const bx = 60 + i * 330;
+      x.fillStyle = 'rgba(0,0,0,.24)';
+      rr(x, bx, 790, 300, 170, 28); x.fill();
+      x.fillStyle = '#fff'; x.font = '800 70px ' + FONT;
+      x.fillText(it[1], bx + 150, 877);
+      x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '600 30px ' + FONT;
+      x.fillText(it[0], bx + 150, 930);
+    });
+    const rnd = mulberry32(hashStr(S.seed || 'x'));
+    for (let i = 0; i < 5; i++) {
+      const cx = 240 + i * 150, cy = 1075;
+      const gr = x.createLinearGradient(cx - 60, cy - 60, cx + 60, cy + 60);
+      gr.addColorStop(0, th.num[0]); gr.addColorStop(1, th.num[1]);
+      x.fillStyle = gr;
+      x.beginPath(); x.arc(cx, cy, 60, 0, Math.PI * 2); x.fill();
+      if (i === 0) { x.lineWidth = 8; x.strokeStyle = '#fff'; x.stroke(); }
+      x.fillStyle = '#fff'; x.font = '800 66px ' + FONT;
+      x.fillText(String(Math.floor(rnd() * 10)), cx, cy + 23);
+    }
+    x.fillStyle = '#fff'; x.font = '800 66px ' + FONT;
+    x.fillText(t('card_cta'), W / 2, 1210);
+    const url = shortUrl();
+    x.font = '700 44px ' + FONT;
+    const w = x.measureText(url).width + 80;
+    x.fillStyle = 'rgba(0,0,0,.3)';
+    rr(x, W / 2 - w / 2, 1240, w, 76, 38); x.fill();
+    x.fillStyle = '#fff';
+    x.fillText(url, W / 2, 1292);
+    return c;
+  }
+  let cardBlob = null;
+  function prepareCard() {   // se genera al terminar la partida para poder compartir al instante
+    cardBlob = null;
+    try { drawCard().toBlob(b => { cardBlob = b; }, 'image/png'); } catch (e) {}
+  }
+  function flashShareBtn(txt) {
+    const b = $('btnShareOver');
+    b.textContent = txt;
+    setTimeout(() => { b.innerHTML = t('share_score'); }, 2200);
+  }
+  async function shareCard() {
+    track('share-card', 'Compartir tarjeta');
+    const url = baseUrl();
+    const base = S.mode === 'daily'
+      ? t('daily_share_text', { n: dayNumber(), s: S.score, l: S.level })
+      : t('share_text_score', { s: S.score });
+    const text = base + '\n' + url;
+    let blob = cardBlob;
+    if (!blob) {
+      try { blob = await new Promise(res => drawCard().toBlob(res, 'image/png')); } catch (e) {}
+    }
+    if (blob) {
+      try {
+        const file = new File([blob], 'comenum-' + S.score + '.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Comenum', text: text });
+          return;
+        }
+      } catch (e) { if (e && e.name === 'AbortError') return; }
+      // Sin compartir archivos (por ejemplo en ordenador): se guarda la imagen
+      try {
+        const a = document.createElement('a');
+        const href = URL.createObjectURL(blob);
+        a.href = href;
+        a.download = 'comenum-' + S.score + '.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(href), 3000);
+        flashShareBtn(t('card_saved'));
+        return;
+      } catch (e) {}
+    }
+    doShare(base, url, 'share');
   }
 
   // ---------- Instalación (PWA) ----------
@@ -2288,12 +2851,14 @@
   press($('plus'), () => change(1));
   press($('display'), eat);
 
-  $('btnPlay').addEventListener('click', () => startGame('normal'));
-  $('btnDaily').addEventListener('click', () => startGame('daily'));
-  $('btnAccept').addEventListener('click', () => startGame('challenge'));
+  $('btnPlay').addEventListener('click', () => begin('normal'));
+  $('btnDaily').addEventListener('click', () => begin('daily'));
+  $('btnAccept').addEventListener('click', () => begin('challenge'));
   $('btnAgain').addEventListener('click', playAgain);
   $('btnMenu').addEventListener('click', () => { sfx('button'); goMenu(); });
   $('btnChallenge').addEventListener('click', shareChallenge);
+  $('tutNext').addEventListener('click', endTutorial);
+  $('tutSkip').addEventListener('click', endTutorial);
   $('lvMinus').addEventListener('click', () => {
     startLevel = Math.max(1, startLevel - 1);
     $('lvVal').textContent = startLevel;
@@ -2314,6 +2879,9 @@
   $('btnAchClose').addEventListener('click', () => { sfx('button'); close('ovAch'); });
   $('btnStats').addEventListener('click', () => { ensureAudio(); sfx('button'); renderStats(); open('ovStats'); track('stats-open', 'Abre estadísticas'); });
   $('btnStatsClose').addEventListener('click', () => { sfx('button'); close('ovStats'); refreshStart(); });
+  $('btnSettings').addEventListener('click', () => { ensureAudio(); sfx('button'); renderSettings(); renderPosChips(); open('ovSettings'); });
+  $('btnSettingsClose').addEventListener('click', () => { sfx('button'); close('ovSettings'); refreshStart(); });
+  $('btnTutAgain').addEventListener('click', () => { sfx('button'); close('ovSettings'); tutNext = 'menu'; startTutorial(); });
   $('btnBackup').addEventListener('click', openBackup);
   $('backupHint').addEventListener('click', openBackup);
   $('btnBackupClose').addEventListener('click', () => { sfx('button'); close('ovBackup'); refreshStart(); });
@@ -2324,7 +2892,7 @@
   $('bkFileBtn').addEventListener('click', () => { sfx('button'); $('bkFile').click(); });
   $('bkFile').addEventListener('change', bkFileChosen);
   $('btnShareStart').addEventListener('click', shareStart);
-  $('btnShareOver').addEventListener('click', shareScore);
+  $('btnShareOver').addEventListener('click', shareCard);
   $('btnSound').addEventListener('click', () => {
     ensureAudio();
     muted = !muted;
@@ -2394,6 +2962,7 @@
   // ---------- Arranque ----------
   applyLang();
   applyTheme();
+  applyAccess();
   applyPos();
   updateSoundIcon();
   hud();
