@@ -133,32 +133,32 @@
     100% { opacity: 0; transform: translate(-50%, -42px) scale(1); }
   }
 
-  /* Controles */
+  /* Controles (el margen inferior --cb lo calcula el juego según la posición elegida) */
   .controls {
     position: relative;
     display: flex; align-items: center; justify-content: space-between;
-    height: 66px; margin: 26px 16px 34px;
+    height: 76px; margin: 18px 16px var(--cb, 34px);
     background: linear-gradient(#2f7de1, #1a56b8);
-    border-radius: 33px;
+    border-radius: 38px;
     box-shadow: 0 6px 16px rgba(0,0,0,.35), inset 0 0 0 3px rgba(255,255,255,.2);
   }
   .cbtn {
     flex: 1; height: 100%; background: transparent; border: none; color: #fff;
-    font-size: 42px; font-weight: 300; cursor: pointer;
+    font-size: 46px; font-weight: 300; cursor: pointer;
   }
   .cbtn:active { background: rgba(255,255,255,.15); }
-  #minus { border-radius: 33px 0 0 33px; padding-right: 40px; }
-  #plus  { border-radius: 0 33px 33px 0; padding-left: 40px; }
+  #minus { border-radius: 38px 0 0 38px; padding-right: 44px; }
+  #plus  { border-radius: 0 38px 38px 0; padding-left: 44px; }
   #display {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-    width: 96px; height: 96px; border-radius: 50%; cursor: pointer;
+    width: 100px; height: 100px; border-radius: 50%; cursor: pointer;
     background: radial-gradient(circle at 35% 30%, #fff3a0, #ffc400);
     box-shadow: 0 6px 16px rgba(0,0,0,.4);
     display: flex; align-items: center; justify-content: center;
   }
   #display span {
-    width: 66px; height: 66px; border-radius: 50%; background: #fff; color: #2b2150;
-    display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 800;
+    width: 70px; height: 70px; border-radius: 50%; background: #fff; color: #2b2150;
+    display: flex; align-items: center; justify-content: center; font-size: 42px; font-weight: 800;
   }
   #display:active { transform: translate(-50%, -50%) scale(.95); }
   #display.ok { animation: pop .35s; }
@@ -202,12 +202,16 @@
     position: absolute; inset: 0; z-index: 100; display: none;
     align-items: center; justify-content: center;
     background: rgba(15,8,40,.78);
+    transition: background .2s;
   }
   .overlay.open { display: flex; }
+  .overlay.peek { background: rgba(15,8,40,.2); }
+  .overlay.peek .card { opacity: .08; }
   .card {
     width: min(88%, 340px); max-height: 94%; overflow-y: auto;
     padding: 22px 20px; border-radius: 24px; text-align: center;
     background: rgba(255,255,255,.97); color: #2b2150; box-shadow: 0 14px 40px rgba(0,0,0,.4);
+    transition: opacity .2s;
   }
   .card h1 { font-size: 40px; letter-spacing: 1px; color: #5b3ea8; margin-bottom: 4px; }
   .card h2 { font-size: 26px; margin-bottom: 10px; color: #d94a4a; }
@@ -254,6 +258,11 @@
     margin-top: 12px; padding: 7px 10px; border-radius: 10px; border: 1px solid #ccc;
     font-size: 14px; background: #fff; color: #2b2150;
   }
+
+  /* Posición de los botones */
+  .posrow { margin-top: 14px; }
+  .posrow .lab { font-size: 13px; font-weight: 700; color: #4b2c82; }
+  .posrow .chip { min-width: 0; padding: 6px 14px; font-size: 13px; }
 
   /* Logros y temas */
   .row {
@@ -373,6 +382,10 @@
         <button class="btn ghost" id="btnInstall" data-i18n="install"></button>
       </div>
       <button class="btn ghost" id="btnBackup" data-i18n="backup_btn"></button>
+      <div class="posrow">
+        <div class="lab" data-i18n="pos_label"></div>
+        <div class="chips poschips"></div>
+      </div>
       <select id="langSel" aria-label="Language"></select>
     </div>
   </div>
@@ -382,6 +395,10 @@
     <div class="card">
       <h3 data-i18n="pause_title"></h3>
       <button class="btn" id="btnResume" data-i18n="resume"></button>
+      <div class="posrow">
+        <div class="lab" data-i18n="pos_label"></div>
+        <div class="chips poschips"></div>
+      </div>
     </div>
   </div>
 
@@ -502,6 +519,18 @@
   const MAX_REACT = 8000;    // ms: tiempos mayores se recortan para no distorsionar la media
   const GOALS = [5, 10, 20]; // objetivos semanales posibles (partidas)
   const BACKUP_DAYS = 14;    // días tras los que se recuerda hacer una copia
+  const MAX_GOAL = 50;       // tope de números a comer para pasar de nivel
+  const POS_KEYS = ['low', 'mid', 'high'];   // posición de los botones: baja, media, alta
+
+  // Curva de dificultad: multiplicador de velocidad según el nivel
+  //   niveles 1-5: +0,25 por nivel · niveles 6-15: +0,08 por nivel · a partir del 15: +0,03 por nivel
+  function speedFactor(L) {
+    if (L <= 5) return 1 + 0.25 * (L - 1);
+    if (L <= 15) return 2 + 0.08 * (L - 5);
+    return 2.8 + 0.03 * (L - 15);
+  }
+  // Números necesarios para pasar de nivel (con tope)
+  function goalFor(L) { return Math.min(MAX_GOAL, 10 + (L - 1) * 5); }
 
   // ---------- Estadísticas anónimas (GoatCounter) ----------
   function track(path, title) {
@@ -603,6 +632,7 @@
   let maxLevel = Math.max(1, parseInt(lsGet('comenum_maxlevel')) || 1);
   let muted = lsGet('comenum_mute') === '1';
   let startLevel = 1;
+  let pos = POS_KEYS.includes(lsGet('comenum_pos')) ? lsGet('comenum_pos') : 'mid';
   let stats = Object.assign({ eaten: 0, games: 0, gold: 0, wild: 0, streak: 0,
                               rn: 0, rsum: 0, rbest: 0, ok: 0, bad: 0, daily: 0, weeksDone: 0 }, jsonGet('comenum_stats', {}));
   let days = Object.assign({ last: '', streak: 0, best: 0, total: 0 }, jsonGet('comenum_days', {}));
@@ -738,6 +768,7 @@
       backup_prot_no: `⚠️ El navegador podría borrar estos datos si le falta espacio. Haz copias de vez en cuando.`,
       backup_hint: `💾 Haz una copia de seguridad de tu progreso`,
       backup_share_text: `Mi copia de seguridad de Comenum:`,
+      pos_label: `Posición de los botones`, pos_low: `Baja`, pos_mid: `Media`, pos_high: `Alta`,
       themes: { classic: `Clásico`, ocean: `Océano`, sunset: `Atardecer`, forest: `Bosque`, candy: `Caramelo`, night: `Noche`, neon: `Neón`, gold: `Dorado` },
       funny: [`¡Eres más lento que un caracol! 🐌`, `¡Debes entrenar más los pulgares! 👍`, `¡Mi abuela es más rápida! 👵`,
               `¿Estás dormido o qué? 😴`, `¡Hasta una tortuga te gana! 🐢`, `¡Necesitas más café! ☕`,
@@ -822,6 +853,7 @@
       backup_prot_no: `⚠️ The browser might delete this data if it runs low on space. Back up from time to time.`,
       backup_hint: `💾 Back up your progress`,
       backup_share_text: `My Comenum backup:`,
+      pos_label: `Button position`, pos_low: `Low`, pos_mid: `Medium`, pos_high: `High`,
       themes: { classic: `Classic`, ocean: `Ocean`, sunset: `Sunset`, forest: `Forest`, candy: `Candy`, night: `Night`, neon: `Neon`, gold: `Gold` },
       funny: [`Slower than a snail! 🐌`, `Time to train those thumbs! 👍`, `My grandma is faster! 👵`,
               `Are you asleep? 😴`, `Even a turtle beats you! 🐢`, `You need more coffee! ☕`,
@@ -905,6 +937,7 @@
       backup_prot_no: `⚠️ Le navigateur pourrait effacer ces données s'il manque de place. Fais des sauvegardes de temps en temps.`,
       backup_hint: `💾 Fais une sauvegarde de ta progression`,
       backup_share_text: `Ma sauvegarde de Comenum :`,
+      pos_label: `Position des boutons`, pos_low: `Basse`, pos_mid: `Moyenne`, pos_high: `Haute`,
       themes: { classic: `Classique`, ocean: `Océan`, sunset: `Crépuscule`, forest: `Forêt`, candy: `Bonbon`, night: `Nuit`, neon: `Néon`, gold: `Or` },
       funny: [`Plus lent qu'un escargot ! 🐌`, `Entraîne un peu plus tes pouces ! 👍`, `Ma grand-mère est plus rapide ! 👵`,
               `Tu dors ou quoi ? 😴`, `Même une tortue te bat ! 🐢`, `Il te faut plus de café ! ☕`,
@@ -988,6 +1021,7 @@
       backup_prot_no: `⚠️ Der Browser könnte diese Daten löschen, wenn Speicher knapp wird. Mache ab und zu eine Sicherung.`,
       backup_hint: `💾 Sichere deinen Fortschritt`,
       backup_share_text: `Meine Comenum-Sicherung:`,
+      pos_label: `Position der Tasten`, pos_low: `Unten`, pos_mid: `Mitte`, pos_high: `Oben`,
       themes: { classic: `Klassisch`, ocean: `Ozean`, sunset: `Sonnenuntergang`, forest: `Wald`, candy: `Bonbon`, night: `Nacht`, neon: `Neon`, gold: `Gold` },
       funny: [`Langsamer als eine Schnecke! 🐌`, `Trainiere mehr deine Daumen! 👍`, `Meine Oma ist schneller! 👵`,
               `Schläfst du? 😴`, `Sogar eine Schildkröte schlägt dich! 🐢`, `Du brauchst mehr Kaffee! ☕`,
@@ -1071,6 +1105,7 @@
       backup_prot_no: `⚠️ Il browser potrebbe cancellare questi dati se manca spazio. Fai una copia ogni tanto.`,
       backup_hint: `💾 Fai una copia di sicurezza dei tuoi progressi`,
       backup_share_text: `Il mio backup di Comenum:`,
+      pos_label: `Posizione dei pulsanti`, pos_low: `Bassa`, pos_mid: `Media`, pos_high: `Alta`,
       themes: { classic: `Classico`, ocean: `Oceano`, sunset: `Tramonto`, forest: `Foresta`, candy: `Caramella`, night: `Notte`, neon: `Neon`, gold: `Oro` },
       funny: [`Più lento di una lumaca! 🐌`, `Devi allenare di più i pollici! 👍`, `Mia nonna è più veloce! 👵`,
               `Dormi o cosa? 😴`, `Anche una tartaruga ti batte! 🐢`, `Ti serve più caffè! ☕`,
@@ -1154,6 +1189,7 @@
       backup_prot_no: `⚠️ O navegador pode apagar estes dados se faltar espaço. Faça cópias de vez em quando.`,
       backup_hint: `💾 Faça uma cópia de segurança do seu progresso`,
       backup_share_text: `Meu backup do Comenum:`,
+      pos_label: `Posição dos botões`, pos_low: `Baixa`, pos_mid: `Média`, pos_high: `Alta`,
       themes: { classic: `Clássico`, ocean: `Oceano`, sunset: `Pôr do sol`, forest: `Floresta`, candy: `Doce`, night: `Noite`, neon: `Neon`, gold: `Ouro` },
       funny: [`Mais lento que uma lesma! 🐌`, `Treine mais esses polegares! 👍`, `Minha avó é mais rápida! 👵`,
               `Está dormindo? 😴`, `Até uma tartaruga ganha de você! 🐢`, `Você precisa de mais café! ☕`,
@@ -1184,6 +1220,7 @@
     document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
     $('bkIn').placeholder = t('backup_paste');
     $('langSel').value = lang;
+    renderPosChips();
     updateScoreLabel();
     refreshStart();
   }
@@ -1204,7 +1241,7 @@
       mode: mode || 'normal', seed: seed || 'x', rng: mulberry32(hashStr(seed || 'x')),
       startLv: lv, target: 0, passed: false,
       score: 0, level: lv, lives: 3, player: 1, time: 0,
-      eaten: 0, goal: 10 + (lv - 1) * 5,
+      eaten: 0, goal: goalFor(lv),
       streak: 0, bestStreak: 0,
       numbers: [], dist: SPACING, breath: 0,
       speedMult: 1, effectLeft: 0, effectKey: '',
@@ -1335,6 +1372,48 @@
   function open(id) { $(id).classList.add('open'); }
   function close(id) { $(id).classList.remove('open'); }
   function updateSoundIcon() { $('btnSound').textContent = muted ? '🔇' : '🔊'; }
+
+  // ---------- Posición de los botones ----------
+  // Baja: margen fijo (como antes). Media: 14 % de la altura. Alta: 22 % de la altura.
+  // Si el móvil es muy bajo, se reduce el margen para que la zona de sorpresas no quede demasiado pequeña.
+  function applyPos() {
+    const app = $('app'), area = $('area');
+    const H = window.innerHeight || 700;
+    let b;
+    if (pos === 'low') b = 34;
+    else b = Math.max(pos === 'mid' ? 64 : 92, Math.round(H * (pos === 'mid' ? 0.14 : 0.22)));
+    app.style.setProperty('--cb', b + 'px');
+    let guard = 0;
+    while (area.clientHeight < 110 && b > 34 && guard++ < 40) {
+      b -= 6;
+      app.style.setProperty('--cb', b + 'px');
+    }
+  }
+  let peekTimer = null;
+  function setPos(p, overlay) {
+    pos = p;
+    lsSet('comenum_pos', p);
+    applyPos();
+    renderPosChips();
+    sfx('button');
+    track('pos/' + p, 'Posición botones ' + p);
+    // La ventana se vuelve casi transparente un momento para ver dónde queda la botonera
+    if (overlay) {
+      overlay.classList.add('peek');
+      clearTimeout(peekTimer);
+      peekTimer = setTimeout(() => overlay.classList.remove('peek'), 1500);
+    }
+  }
+  function renderPosChips() {
+    document.querySelectorAll('.poschips').forEach(box => {
+      box.innerHTML = '';
+      POS_KEYS.forEach(k => {
+        const c = mk('button', 'chip' + (k === pos ? ' sel' : ''), t('pos_' + k));
+        c.addEventListener('click', () => setPos(k, box.closest('.overlay')));
+        box.appendChild(c);
+      });
+    });
+  }
 
   // Pantalla de inicio: récord, rachas, reto diario, reto de amigo y selector de nivel
   function refreshStart() {
@@ -1806,7 +1885,7 @@
     if (S.eaten >= S.goal) {
       S.level++;
       S.eaten = 0;
-      S.goal = 10 + (S.level - 1) * 5;
+      S.goal = goalFor(S.level);
       if (S.level > maxLevel) { maxLevel = S.level; lsSet('comenum_maxlevel', String(maxLevel)); }
       setBackground(S.level);
       toast(t('level_up', { n: S.level }), 'good');
@@ -1967,8 +2046,8 @@
       else $('effect').textContent = t(S.effectKey) + ' ' + Math.ceil(S.effectLeft) + 's';
     }
 
-    // Movimiento
-    const speed = BASE_SPEED * (1 + 0.25 * (S.level - 1)) * S.speedMult;
+    // Movimiento (la velocidad depende del nivel según la curva de dificultad)
+    const speed = BASE_SPEED * speedFactor(S.level) * S.speedMult;
     const move = speed * dt;
     S.numbers.forEach(n => { n.x -= move; });
 
@@ -2271,6 +2350,10 @@
     }
   });
 
+  // Recalcular la posición de los botones si cambia el tamaño de la pantalla
+  window.addEventListener('resize', applyPos);
+  window.addEventListener('orientationchange', () => setTimeout(applyPos, 300));
+
   // Pausa automática: llamadas, cambio de app, bloqueo de pantalla, avisos flotantes
   document.addEventListener('visibilitychange', () => { if (document.hidden) { saveAll(); pauseGame(); } });
   window.addEventListener('pagehide', () => { saveAll(); pauseGame(); });
@@ -2311,12 +2394,13 @@
   // ---------- Arranque ----------
   applyLang();
   applyTheme();
+  applyPos();
   updateSoundIcon();
   hud();
   requestAnimationFrame(loop);
 
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    window.addEventListener('load', () => { applyPos(); navigator.serviceWorker.register('sw.js').catch(() => {}); });
   }
 })();
 </script>
