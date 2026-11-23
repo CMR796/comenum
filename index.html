@@ -216,15 +216,27 @@
   .card ul { text-align: left; margin: 8px 0 4px 20px; font-size: 14px; line-height: 1.5; }
   .card li { margin-bottom: 4px; }
   .big { font-size: 34px; font-weight: 900; color: #e6a100; }
+  .info { font-size: 13px; opacity: .85; }
   .btn {
     display: block; width: 100%; margin-top: 10px; padding: 12px; border: none; border-radius: 14px;
     font-size: 17px; font-weight: 800; color: #fff; cursor: pointer;
     background: linear-gradient(135deg, #667eea, #764ba2);
   }
+  .btn small { display: block; font-size: 12px; font-weight: 600; opacity: .92; margin-top: 2px; }
   .btn.green { background: linear-gradient(135deg, #25d366, #128c7e); }
+  .btn.orange { background: linear-gradient(135deg, #ff9a56, #e0455a); }
   .btn.ghost { background: #eee; color: #4b2c82; }
   .btn:active { transform: scale(.97); }
+  .btnrow { display: flex; gap: 8px; }
+  .btnrow .btn { font-size: 14px; padding: 10px 6px; }
   .hidden { display: none !important; }
+
+  /* Reto de amigo (banner) */
+  .banner {
+    background: #fff1d6; border: 2px solid #ffb347; border-radius: 14px;
+    padding: 10px; margin: 10px 0 0; font-weight: 800; font-size: 14px; color: #6b3b00;
+  }
+  .banner .btn { margin-top: 8px; }
 
   /* Selector de nivel inicial */
   #levelPick { margin: 10px 0 2px; }
@@ -258,6 +270,29 @@
   .row.sel { outline: 3px solid #5b3ea8; }
   .row.done { background: #e4f7ea; }
   .cnt { font-size: 13px; opacity: .75; margin-bottom: 2px; }
+
+  /* Estadísticas */
+  .tip { background: #fff6d6; border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.4; margin: 8px 0; text-align: left; }
+  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+  .metric { background: #f1eefb; border-radius: 12px; padding: 10px 6px; }
+  .metric b { display: block; font-size: 22px; color: #5b3ea8; }
+  .metric span { font-size: 12px; opacity: .8; }
+  .sec { font-size: 15px; font-weight: 800; color: #5b3ea8; margin-top: 14px; text-align: left; }
+  .bar { height: 10px; border-radius: 6px; background: #e3def5; overflow: hidden; margin-top: 6px; }
+  .bar i { display: block; height: 100%; background: #43c68c; }
+  .chips { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+  .chip {
+    min-width: 54px; padding: 7px 12px; border-radius: 999px; border: 2px solid #5b3ea8;
+    background: #fff; color: #5b3ea8; font-weight: 800; font-size: 15px; cursor: pointer;
+  }
+  .chip.sel { background: #5b3ea8; color: #fff; }
+  .wk { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 13px; text-align: left; }
+  .wk .l { width: 74px; flex: none; }
+  .wk .bar { flex: 1; margin-top: 0; }
+  .wk .v { width: 58px; text-align: right; font-weight: 800; flex: none; }
+
+  /* Mensajes de fin de partida */
+  .msgs p { background: #f1eefb; border-radius: 10px; padding: 7px 10px; font-size: 14px; margin: 6px 0; }
 </style>
 </head>
 <body>
@@ -274,7 +309,7 @@
   </div>
 
   <div id="scoreWrap">
-    <div class="lbl" data-i18n="score"></div>
+    <div class="lbl" id="scoreLbl"></div>
     <div id="score">0</div>
     <div id="prog"><i id="progBar"></i></div>
     <div id="combo"></div>
@@ -299,6 +334,11 @@
       <h1>Comenum</h1>
       <p data-i18n="tagline"></p>
       <p><span data-i18n="record"></span>: <span class="big" id="bestStart">0</span></p>
+      <p class="info" id="startInfo"></p>
+      <div id="chBanner" class="banner hidden">
+        <div id="chText"></div>
+        <button class="btn orange" id="btnAccept" data-i18n="ch_accept"></button>
+      </div>
       <div id="levelPick" class="hidden">
         <div class="lpLabel" data-i18n="start_level"></div>
         <div class="picker">
@@ -308,10 +348,16 @@
         </div>
       </div>
       <button class="btn" id="btnPlay" data-i18n="play"></button>
+      <button class="btn orange" id="btnDaily"><span data-i18n="daily_btn"></span><small id="dailySub"></small></button>
       <button class="btn green" id="btnShareStart" data-i18n="share"></button>
-      <button class="btn ghost" id="btnAch" data-i18n="ach_btn"></button>
-      <button class="btn ghost" id="btnInstall" data-i18n="install"></button>
-      <button class="btn ghost" id="btnHowTo" data-i18n="howto"></button>
+      <div class="btnrow">
+        <button class="btn ghost" id="btnStats" data-i18n="stats_btn"></button>
+        <button class="btn ghost" id="btnAch" data-i18n="ach_btn"></button>
+      </div>
+      <div class="btnrow">
+        <button class="btn ghost" id="btnHowTo" data-i18n="howto"></button>
+        <button class="btn ghost" id="btnInstall" data-i18n="install"></button>
+      </div>
       <select id="langSel" aria-label="Language"></select>
     </div>
   </div>
@@ -336,6 +382,8 @@
         <li data-i18n="help5"></li>
         <li data-i18n="help7"></li>
         <li data-i18n="help8"></li>
+        <li data-i18n="help9"></li>
+        <li data-i18n="help10"></li>
         <li data-i18n="help6"></li>
       </ul>
       <button class="btn" id="btnHelpClose" data-i18n="ok"></button>
@@ -360,9 +408,13 @@
       <p id="newRecord" class="hidden"><b data-i18n="new_record"></b></p>
       <p><span data-i18n="score"></span>: <span class="big" id="finalScore">0</span></p>
       <p><span data-i18n="level"></span>: <b id="finalLevel">1</b> · <span data-i18n="time"></span>: <b id="finalTime">00:00</b></p>
+      <p id="goReact" class="hidden"></p>
       <p><span data-i18n="streak_best"></span>: <b id="finalStreak">0</b> · <span data-i18n="record"></span>: <b id="finalBest">0</b></p>
+      <div class="msgs" id="goMsgs"></div>
       <button class="btn" id="btnAgain" data-i18n="again"></button>
+      <button class="btn orange" id="btnChallenge" data-i18n="ch_btn"></button>
       <button class="btn green" id="btnShareOver" data-i18n="share_score"></button>
+      <button class="btn ghost" id="btnMenu" data-i18n="menu_btn"></button>
     </div>
   </div>
 
@@ -375,6 +427,15 @@
       <p class="cnt" id="achCount"></p>
       <div id="achList"></div>
       <button class="btn" id="btnAchClose" data-i18n="close"></button>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="overlay" id="ovStats">
+    <div class="card">
+      <h3 data-i18n="stats_title"></h3>
+      <div id="statsBody"></div>
+      <button class="btn" id="btnStatsClose" data-i18n="close"></button>
     </div>
   </div>
 </div>
@@ -393,9 +454,11 @@
   const MAX_MULT = 5;        // multiplicador máximo
   const P_WILD = 0.06;       // probabilidad de comodín
   const P_GOLD = 0.09;       // probabilidad de número dorado
+  const MIN_REACT = 120;     // ms: tiempos menores se descartan (medición poco fiable)
+  const MAX_REACT = 8000;    // ms: tiempos mayores se recortan para no distorsionar la media
+  const GOALS = [5, 10, 20]; // objetivos semanales posibles (partidas)
 
   // ---------- Estadísticas anónimas (GoatCounter) ----------
-  // Si el contador está bloqueado o sin conexión, no pasa nada: el juego sigue igual.
   function track(path, title) {
     try {
       if (window.goatcounter && typeof window.goatcounter.count === 'function') {
@@ -404,8 +467,40 @@
     } catch (e) {}
   }
 
+  // ---------- Fechas y semillas ----------
+  const pad2 = n => String(n).padStart(2, '0');
+  function dateKey(d) { d = d || new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function weekKey(d) {   // lunes de la semana
+    d = d || new Date();
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+    return dateKey(x);
+  }
+  function yesterdayKey() { const x = new Date(); x.setDate(x.getDate() - 1); return dateKey(x); }
+  function dayNumber() {  // nº del reto diario (el día 1 es el 23/11/2026)
+    const a = Date.UTC(2026, 10, 23);
+    const n = new Date();
+    const b = Date.UTC(n.getFullYear(), n.getMonth(), n.getDate());
+    return Math.max(1, Math.floor((b - a) / 86400000) + 1);
+  }
+  function hashStr(s) {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const randomSeed = () => Math.floor(Math.random() * 4294967296).toString(36);
+
   // ---------- Logros ----------
-  // type: eat (números comidos), streak (racha), level, score, gold, wild, games
+  // type: eat, streak, level, score, gold, wild, games, days, daily, weeks (contadores)
+  //       rbest (mejor reacción en ms, menor es mejor), ravg (media de la partida en ms, con mínimo de números)
   const ACHS = [
     { id: 'eat100',    type: 'eat',    n: 100,   icon: '🍽️' },
     { id: 'eat500',    type: 'eat',    n: 500,   icon: '🍔' },
@@ -421,7 +516,16 @@
     { id: 'score20000',type: 'score',  n: 20000, icon: '🥇' },
     { id: 'gold10',    type: 'gold',   n: 10,    icon: '⭐' },
     { id: 'wild10',    type: 'wild',   n: 10,    icon: '🃏' },
-    { id: 'games10',   type: 'games',  n: 10,    icon: '🎮' }
+    { id: 'games10',   type: 'games',  n: 10,    icon: '🎮' },
+    { id: 'rbest400',  type: 'rbest',  n: 400,   icon: '⏱️' },
+    { id: 'ravg1200',  type: 'ravg',   n: 1200,  min: 25, icon: '🏎️' },
+    { id: 'ravg900',   type: 'ravg',   n: 900,   min: 40, icon: '🧠' },
+    { id: 'days3',     type: 'days',   n: 3,     icon: '📆' },
+    { id: 'days7',     type: 'days',   n: 7,     icon: '🗓️' },
+    { id: 'days30',    type: 'days',   n: 30,    icon: '👑' },
+    { id: 'daily1',    type: 'daily',  n: 1,     icon: '📅' },
+    { id: 'daily7',    type: 'daily',  n: 7,     icon: '🎖️' },
+    { id: 'weeks1',    type: 'weeks',  n: 1,     icon: '🎯' }
   ];
 
   // ---------- Temas de color ----------
@@ -454,7 +558,13 @@
   let maxLevel = Math.max(1, parseInt(lsGet('comenum_maxlevel')) || 1);
   let muted = lsGet('comenum_mute') === '1';
   let startLevel = 1;
-  let stats = Object.assign({ eaten: 0, games: 0, gold: 0, wild: 0, streak: 0 }, jsonGet('comenum_stats', {}));
+  let stats = Object.assign({ eaten: 0, games: 0, gold: 0, wild: 0, streak: 0,
+                              rn: 0, rsum: 0, rbest: 0, ok: 0, bad: 0, daily: 0, weeksDone: 0 }, jsonGet('comenum_stats', {}));
+  let days = Object.assign({ last: '', streak: 0, best: 0, total: 0 }, jsonGet('comenum_days', {}));
+  let weeks = jsonGet('comenum_weeks', {});
+  if (!weeks || typeof weeks !== 'object' || Array.isArray(weeks)) weeks = {};
+  let dailyRec = Object.assign({ date: '', best: 0, plays: 0 }, jsonGet('comenum_daily', {}));
+  let goal = GOALS.includes(parseInt(lsGet('comenum_goal'))) ? parseInt(lsGet('comenum_goal')) : 10;
   const unlocked = new Set((() => { const a = jsonGet('comenum_ach', []); return Array.isArray(a) ? a : []; })());
   let themeId = lsGet('comenum_theme') || 'classic';
 
@@ -463,13 +573,52 @@
   const curTheme = () => THEMES.find(x => x.id === themeId) || THEMES[0];
   if (!themeUnlocked(curTheme())) themeId = 'classic';
 
+  function curWeek() {
+    const k = weekKey();
+    if (!weeks[k]) weeks[k] = { n: 0, sum: 0, ok: 0, bad: 0, games: 0, done: false };
+    return weeks[k];
+  }
+  function saveAll() {
+    try { stats.streak = Math.max(stats.streak, (S && S.bestStreak) || 0); } catch (e) {}
+    Object.keys(weeks).sort().reverse().slice(12).forEach(k => delete weeks[k]);
+    lsSet('comenum_stats', JSON.stringify(stats));
+    lsSet('comenum_days', JSON.stringify(days));
+    lsSet('comenum_weeks', JSON.stringify(weeks));
+    lsSet('comenum_daily', JSON.stringify(dailyRec));
+  }
+  function currentDayStreak() {
+    return (days.last === dateKey() || days.last === yesterdayKey()) ? days.streak : 0;
+  }
+  function touchDay() {   // se llama al comer el primer número de una partida
+    const today = dateKey();
+    if (days.last === today) return;
+    days.streak = (days.last === yesterdayKey()) ? days.streak + 1 : 1;
+    days.best = Math.max(days.best, days.streak);
+    days.total++;
+    days.last = today;
+    saveAll();
+    checkAchievements();
+  }
+
+  // ---------- Reto de un amigo (enlace) ----------
+  let pendingChallenge = null;   // { seed, score, lv }
+  function parseChallenge() {
+    const m = /^#c=([A-Za-z0-9_-]{1,40})\.(\d{1,9})\.(\d{1,3})$/.exec(location.hash || '');
+    if (!m) return null;
+    return { seed: m[1], score: parseInt(m[2], 10), lv: Math.max(1, Math.min(100, parseInt(m[3], 10))) };
+  }
+  function clearHash() {
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  }
+  pendingChallenge = parseChallenge();
+
   // ---------- Idiomas ----------
   const LANG_NAMES = { es: 'Español', en: 'English', fr: 'Français', de: 'Deutsch', it: 'Italiano', pt: 'Português' };
   const I18N = {
     es: {
       tagline: `Come los números antes de que lleguen al borde.`,
       record: `Récord`, play: `▶ Jugar`, share: `📤 Compartir con un amigo`,
-      install: `📲 Instalar en el móvil`, howto: `❓ Cómo se juega`,
+      install: `📲 Instalar`, howto: `❓ Cómo se juega`, menu_btn: `🏠 Menú`,
       start_level: `Empezar en el nivel`,
       pause_title: `Juego en pausa`, resume: `▶ Continuar`,
       help_title: `¿Cómo se juega?`,
@@ -481,6 +630,8 @@
       help6: `En ordenador: ← → para − y +, ↓ para comer, ↑ para coger una sorpresa.`,
       help7: `Rachas: cada 5 números seguidos sin fallar sube el multiplicador (hasta ×5). Un fallo, o perder una vida, lo reinicia.`,
       help8: `Número dorado ⭐ = puntos ×3. Número «?» = comodín: se come con cualquier número.`,
+      help9: `Reto diario: la misma secuencia de números para todos cada día. Puedes retar a un amigo con un enlace.`,
+      help10: `En Estadísticas ves tu tiempo de reacción y tu evolución semanal.`,
       ok: `Entendido`, close: `Cerrar`,
       ios_title: `Instalar en iPhone`,
       ios1: `1. Abre esta página en <b>Safari</b>.`,
@@ -497,6 +648,37 @@
       ach_eat: `Come {n} números`, ach_streak: `Racha de {n} seguidos`, ach_level: `Llega al nivel {n}`,
       ach_score: `Consigue {n} puntos`, ach_gold: `Come {n} números dorados`, ach_wild: `Come {n} comodines`,
       ach_games: `Juega {n} partidas`,
+      ach_rbest: `Come un número en menos de {s} s`,
+      ach_ravg: `Media de menos de {s} s en una partida (mínimo {m} números)`,
+      ach_days: `Juega {n} días seguidos`, ach_daily: `Retos diarios completados: {n}`, ach_weeks: `Cumple tu objetivo semanal`,
+      daily_btn: `📅 Reto diario`, daily_todo: `La misma partida para todos hoy`, daily_done: `Hoy: {s} puntos ✓`,
+      stats_btn: `📊 Estadísticas`,
+      info_streak: `🔥 {d} días seguidos`, info_week: `🎯 Semana: {g}/{n}`,
+      ch_banner: `⚔️ Un amigo te reta: supera {s} puntos`, ch_accept: `⚔️ Aceptar el reto`, ch_btn: `⚔️ Retar a un amigo`,
+      ch_text: `¡Te reto en Comenum! Supera mis {s} puntos con la misma secuencia de números ⚔️🔢`,
+      ch_tag: `⚔️ Reto: {s}`, daily_tag: `📅 Reto diario`,
+      ch_passed: `⚔️ ¡Has superado a tu amigo!`, ch_won: `🏆 ¡Has superado el reto de tu amigo!`,
+      ch_lost: `Te han faltado {d} puntos para superar a tu amigo.`,
+      daily_share_text: `Comenum #{n} 📅 {s} puntos · nivel {l}. ¿Puedes superarme? 🔢`,
+      go_react: `Reacción media`, go_acc: `Precisión`,
+      near_record: `¡Te han faltado {d} puntos para tu récord!`,
+      near_level: `¡Te faltaban solo {k} números para el nivel {n}!`,
+      near_ach: `Casi: te faltan {k} para «{a}»`,
+      go_streak: `🔥 ¡{d} días seguidos jugando!`, go_goal: `🎯 ¡Objetivo semanal cumplido!`,
+      go_daily: `📅 Tu mejor puntuación en el reto de hoy: {s}`,
+      stats_title: `Tus estadísticas`,
+      st_react_avg: `Reacción media`, st_react_best: `Mejor reacción`, st_acc: `Precisión`, st_games: `Partidas`,
+      st_days: `Racha de días`, st_days_best: `mejor: {d}`,
+      st_goal: `Objetivo semanal`, st_goal_prog: `{g} de {n} partidas esta semana`,
+      st_weeks: `Evolución semanal`, st_less: `Menos tiempo = más rápido`, st_this: `Esta semana`,
+      st_trend_up: `¡Tu reacción ha mejorado un {p}% respecto a la semana anterior! 🚀`,
+      st_trend_down: `Esta semana vas algo más lento que la anterior. ¡Buen momento para recuperar el ritmo!`,
+      st_trend_flat: `Mantienes un ritmo estable. ¡Sigue así!`,
+      st_nodata: `Juega unas cuantas partidas y aquí verás cómo evolucionan tus reflejos.`,
+      tips: [`Cada partida es un mini entrenamiento de atención y reflejos. ¡La constancia marca la diferencia!`,
+             `Fija la vista en el primer número y olvida el resto: así afinas tu concentración.`,
+             `Jugar un poco cada día rinde más que jugar mucho un solo día.`,
+             `Mientras comes un número, ve pensando en el siguiente: así entrenas tu memoria rápida.`],
       themes: { classic: `Clásico`, ocean: `Océano`, sunset: `Atardecer`, forest: `Bosque`, candy: `Caramelo`, night: `Noche`, neon: `Neón`, gold: `Dorado` },
       funny: [`¡Eres más lento que un caracol! 🐌`, `¡Debes entrenar más los pulgares! 👍`, `¡Mi abuela es más rápida! 👵`,
               `¿Estás dormido o qué? 😴`, `¡Hasta una tortuga te gana! 🐢`, `¡Necesitas más café! ☕`,
@@ -506,7 +688,7 @@
     en: {
       tagline: `Eat the numbers before they reach the edge.`,
       record: `Best`, play: `▶ Play`, share: `📤 Share with a friend`,
-      install: `📲 Install on your phone`, howto: `❓ How to play`,
+      install: `📲 Install`, howto: `❓ How to play`, menu_btn: `🏠 Menu`,
       start_level: `Start at level`,
       pause_title: `Game paused`, resume: `▶ Resume`,
       help_title: `How to play`,
@@ -518,6 +700,8 @@
       help6: `On a computer: ← → for − and +, ↓ to eat, ↑ to grab a surprise.`,
       help7: `Streaks: every 5 numbers in a row without a mistake raises the multiplier (up to ×5). A mistake, or losing a life, resets it.`,
       help8: `Golden number ⭐ = triple points. Number “?” = wildcard: it can be eaten with any number.`,
+      help9: `Daily challenge: the same number sequence for everyone each day. You can challenge a friend with a link.`,
+      help10: `In Statistics you can see your reaction time and your weekly progress.`,
       ok: `Got it`, close: `Close`,
       ios_title: `Install on iPhone`,
       ios1: `1. Open this page in <b>Safari</b>.`,
@@ -534,6 +718,37 @@
       ach_eat: `Eat {n} numbers`, ach_streak: `Streak of {n} in a row`, ach_level: `Reach level {n}`,
       ach_score: `Score {n} points`, ach_gold: `Eat {n} golden numbers`, ach_wild: `Eat {n} wildcards`,
       ach_games: `Play {n} games`,
+      ach_rbest: `Eat a number in under {s} s`,
+      ach_ravg: `Average under {s} s in one game (at least {m} numbers)`,
+      ach_days: `Play {n} days in a row`, ach_daily: `Daily challenges completed: {n}`, ach_weeks: `Reach your weekly goal`,
+      daily_btn: `📅 Daily challenge`, daily_todo: `The same game for everyone today`, daily_done: `Today: {s} points ✓`,
+      stats_btn: `📊 Statistics`,
+      info_streak: `🔥 {d} days in a row`, info_week: `🎯 Week: {g}/{n}`,
+      ch_banner: `⚔️ A friend challenges you: beat {s} points`, ch_accept: `⚔️ Accept the challenge`, ch_btn: `⚔️ Challenge a friend`,
+      ch_text: `I challenge you in Comenum! Beat my {s} points with the same number sequence ⚔️🔢`,
+      ch_tag: `⚔️ Challenge: {s}`, daily_tag: `📅 Daily challenge`,
+      ch_passed: `⚔️ You beat your friend!`, ch_won: `🏆 You beat your friend's challenge!`,
+      ch_lost: `You were {d} points short of beating your friend.`,
+      daily_share_text: `Comenum #{n} 📅 {s} points · level {l}. Can you beat me? 🔢`,
+      go_react: `Avg. reaction`, go_acc: `Accuracy`,
+      near_record: `You were just {d} points short of your record!`,
+      near_level: `Only {k} numbers short of level {n}!`,
+      near_ach: `Almost: {k} to go for “{a}”`,
+      go_streak: `🔥 {d} days in a row!`, go_goal: `🎯 Weekly goal reached!`,
+      go_daily: `📅 Your best score in today's challenge: {s}`,
+      stats_title: `Your statistics`,
+      st_react_avg: `Average reaction`, st_react_best: `Best reaction`, st_acc: `Accuracy`, st_games: `Games`,
+      st_days: `Day streak`, st_days_best: `best: {d}`,
+      st_goal: `Weekly goal`, st_goal_prog: `{g} of {n} games this week`,
+      st_weeks: `Weekly progress`, st_less: `Less time = faster`, st_this: `This week`,
+      st_trend_up: `Your reaction improved {p}% compared with last week! 🚀`,
+      st_trend_down: `You're a bit slower than last week. A good moment to get back into rhythm!`,
+      st_trend_flat: `You're holding a steady pace. Keep it up!`,
+      st_nodata: `Play a few games and you'll see here how your reflexes evolve.`,
+      tips: [`Every game is a mini workout for your attention and reflexes. Consistency makes the difference!`,
+             `Keep your eyes on the first number and forget the rest: it sharpens your focus.`,
+             `Playing a little every day beats playing a lot on a single day.`,
+             `While you eat one number, think about the next: that trains your quick memory.`],
       themes: { classic: `Classic`, ocean: `Ocean`, sunset: `Sunset`, forest: `Forest`, candy: `Candy`, night: `Night`, neon: `Neon`, gold: `Gold` },
       funny: [`Slower than a snail! 🐌`, `Time to train those thumbs! 👍`, `My grandma is faster! 👵`,
               `Are you asleep? 😴`, `Even a turtle beats you! 🐢`, `You need more coffee! ☕`,
@@ -542,7 +757,7 @@
     fr: {
       tagline: `Mange les nombres avant qu'ils n'atteignent le bord.`,
       record: `Record`, play: `▶ Jouer`, share: `📤 Partager avec un ami`,
-      install: `📲 Installer sur le téléphone`, howto: `❓ Comment jouer`,
+      install: `📲 Installer`, howto: `❓ Comment jouer`, menu_btn: `🏠 Menu`,
       start_level: `Commencer au niveau`,
       pause_title: `Jeu en pause`, resume: `▶ Reprendre`,
       help_title: `Comment jouer ?`,
@@ -554,6 +769,8 @@
       help6: `Sur ordinateur : ← → pour − et +, ↓ pour manger, ↑ pour attraper une surprise.`,
       help7: `Séries : tous les 5 nombres de suite sans erreur, le multiplicateur augmente (jusqu'à ×5). Une erreur, ou perdre une vie, le remet à zéro.`,
       help8: `Nombre doré ⭐ = points ×3. Nombre « ? » = joker : on peut le manger avec n'importe quel nombre.`,
+      help9: `Défi du jour : la même suite de nombres pour tout le monde chaque jour. Tu peux défier un ami avec un lien.`,
+      help10: `Dans Statistiques, tu vois ton temps de réaction et ta progression par semaine.`,
       ok: `Compris`, close: `Fermer`,
       ios_title: `Installer sur iPhone`,
       ios1: `1. Ouvre cette page dans <b>Safari</b>.`,
@@ -570,6 +787,37 @@
       ach_eat: `Mange {n} nombres`, ach_streak: `Série de {n} d'affilée`, ach_level: `Atteins le niveau {n}`,
       ach_score: `Marque {n} points`, ach_gold: `Mange {n} nombres dorés`, ach_wild: `Mange {n} jokers`,
       ach_games: `Joue {n} parties`,
+      ach_rbest: `Mange un nombre en moins de {s} s`,
+      ach_ravg: `Moyenne de moins de {s} s dans une partie (au moins {m} nombres)`,
+      ach_days: `Joue {n} jours d'affilée`, ach_daily: `Défis du jour terminés : {n}`, ach_weeks: `Atteins ton objectif hebdomadaire`,
+      daily_btn: `📅 Défi du jour`, daily_todo: `La même partie pour tous aujourd'hui`, daily_done: `Aujourd'hui : {s} points ✓`,
+      stats_btn: `📊 Statistiques`,
+      info_streak: `🔥 {d} jours d'affilée`, info_week: `🎯 Semaine : {g}/{n}`,
+      ch_banner: `⚔️ Un ami te défie : bats {s} points`, ch_accept: `⚔️ Accepter le défi`, ch_btn: `⚔️ Défier un ami`,
+      ch_text: `Je te défie à Comenum ! Bats mes {s} points avec la même suite de nombres ⚔️🔢`,
+      ch_tag: `⚔️ Défi : {s}`, daily_tag: `📅 Défi du jour`,
+      ch_passed: `⚔️ Tu as battu ton ami !`, ch_won: `🏆 Tu as relevé le défi de ton ami !`,
+      ch_lost: `Il t'a manqué {d} points pour battre ton ami.`,
+      daily_share_text: `Comenum #{n} 📅 {s} points · niveau {l}. Peux-tu me battre ? 🔢`,
+      go_react: `Réaction moyenne`, go_acc: `Précision`,
+      near_record: `Il t'a manqué seulement {d} points pour ton record !`,
+      near_level: `Il te manquait seulement {k} nombres pour le niveau {n} !`,
+      near_ach: `Presque : encore {k} pour « {a} »`,
+      go_streak: `🔥 {d} jours d'affilée !`, go_goal: `🎯 Objectif de la semaine atteint !`,
+      go_daily: `📅 Ton meilleur score au défi du jour : {s}`,
+      stats_title: `Tes statistiques`,
+      st_react_avg: `Réaction moyenne`, st_react_best: `Meilleure réaction`, st_acc: `Précision`, st_games: `Parties`,
+      st_days: `Jours d'affilée`, st_days_best: `meilleur : {d}`,
+      st_goal: `Objectif hebdomadaire`, st_goal_prog: `{g} parties sur {n} cette semaine`,
+      st_weeks: `Évolution par semaine`, st_less: `Moins de temps = plus rapide`, st_this: `Cette semaine`,
+      st_trend_up: `Ta réaction s'est améliorée de {p} % par rapport à la semaine dernière ! 🚀`,
+      st_trend_down: `Cette semaine tu es un peu plus lent que la précédente. C'est le moment de retrouver ton rythme !`,
+      st_trend_flat: `Tu gardes un rythme stable. Continue !`,
+      st_nodata: `Joue quelques parties et tu verras ici l'évolution de tes réflexes.`,
+      tips: [`Chaque partie est un mini-entraînement pour ton attention et tes réflexes. La régularité fait la différence !`,
+             `Garde les yeux sur le premier nombre et oublie le reste : ça aiguise ta concentration.`,
+             `Jouer un peu chaque jour vaut mieux que beaucoup un seul jour.`,
+             `Pendant que tu manges un nombre, pense au suivant : tu entraînes ta mémoire rapide.`],
       themes: { classic: `Classique`, ocean: `Océan`, sunset: `Crépuscule`, forest: `Forêt`, candy: `Bonbon`, night: `Nuit`, neon: `Néon`, gold: `Or` },
       funny: [`Plus lent qu'un escargot ! 🐌`, `Entraîne un peu plus tes pouces ! 👍`, `Ma grand-mère est plus rapide ! 👵`,
               `Tu dors ou quoi ? 😴`, `Même une tortue te bat ! 🐢`, `Il te faut plus de café ! ☕`,
@@ -578,7 +826,7 @@
     de: {
       tagline: `Iss die Zahlen, bevor sie den Rand erreichen.`,
       record: `Rekord`, play: `▶ Spielen`, share: `📤 Mit einem Freund teilen`,
-      install: `📲 Auf dem Handy installieren`, howto: `❓ Spielanleitung`,
+      install: `📲 Installieren`, howto: `❓ Spielanleitung`, menu_btn: `🏠 Menü`,
       start_level: `Starten bei Level`,
       pause_title: `Spiel pausiert`, resume: `▶ Weiter`,
       help_title: `Spielanleitung`,
@@ -590,6 +838,8 @@
       help6: `Am Computer: ← → für − und +, ↓ zum Essen, ↑ für eine Überraschung.`,
       help7: `Serien: Alle 5 Zahlen in Folge ohne Fehler steigt der Multiplikator (bis ×5). Ein Fehler oder ein verlorenes Leben setzt ihn zurück.`,
       help8: `Goldene Zahl ⭐ = dreifache Punkte. Zahl „?“ = Joker: Sie kann mit jeder Zahl gegessen werden.`,
+      help9: `Tagesaufgabe: Jeden Tag dieselbe Zahlenfolge für alle. Mit einem Link kannst du einen Freund herausfordern.`,
+      help10: `Unter Statistiken siehst du deine Reaktionszeit und deine Entwicklung pro Woche.`,
       ok: `Verstanden`, close: `Schließen`,
       ios_title: `Auf dem iPhone installieren`,
       ios1: `1. Öffne diese Seite in <b>Safari</b>.`,
@@ -606,6 +856,37 @@
       ach_eat: `Iss {n} Zahlen`, ach_streak: `{n} in Folge`, ach_level: `Erreiche Level {n}`,
       ach_score: `Erreiche {n} Punkte`, ach_gold: `Iss {n} goldene Zahlen`, ach_wild: `Iss {n} Joker`,
       ach_games: `Spiele {n} Partien`,
+      ach_rbest: `Iss eine Zahl in unter {s} s`,
+      ach_ravg: `Durchschnitt unter {s} s in einer Partie (mindestens {m} Zahlen)`,
+      ach_days: `Spiele {n} Tage in Folge`, ach_daily: `Abgeschlossene Tagesaufgaben: {n}`, ach_weeks: `Erreiche dein Wochenziel`,
+      daily_btn: `📅 Tagesaufgabe`, daily_todo: `Heute dasselbe Spiel für alle`, daily_done: `Heute: {s} Punkte ✓`,
+      stats_btn: `📊 Statistiken`,
+      info_streak: `🔥 {d} Tage in Folge`, info_week: `🎯 Woche: {g}/{n}`,
+      ch_banner: `⚔️ Ein Freund fordert dich heraus: schlage {s} Punkte`, ch_accept: `⚔️ Herausforderung annehmen`, ch_btn: `⚔️ Freund herausfordern`,
+      ch_text: `Ich fordere dich bei Comenum heraus! Schlage meine {s} Punkte mit derselben Zahlenfolge ⚔️🔢`,
+      ch_tag: `⚔️ Duell: {s}`, daily_tag: `📅 Tagesaufgabe`,
+      ch_passed: `⚔️ Du hast deinen Freund geschlagen!`, ch_won: `🏆 Du hast die Herausforderung deines Freundes geschafft!`,
+      ch_lost: `Dir haben {d} Punkte gefehlt, um deinen Freund zu schlagen.`,
+      daily_share_text: `Comenum #{n} 📅 {s} Punkte · Level {l}. Kannst du mich schlagen? 🔢`,
+      go_react: `Ø Reaktion`, go_acc: `Genauigkeit`,
+      near_record: `Dir haben nur {d} Punkte zum Rekord gefehlt!`,
+      near_level: `Dir fehlten nur {k} Zahlen bis Level {n}!`,
+      near_ach: `Fast: noch {k} bis „{a}“`,
+      go_streak: `🔥 {d} Tage in Folge!`, go_goal: `🎯 Wochenziel erreicht!`,
+      go_daily: `📅 Dein bestes Ergebnis in der heutigen Tagesaufgabe: {s}`,
+      stats_title: `Deine Statistiken`,
+      st_react_avg: `Ø Reaktion`, st_react_best: `Beste Reaktion`, st_acc: `Genauigkeit`, st_games: `Partien`,
+      st_days: `Tage in Folge`, st_days_best: `Bestwert: {d}`,
+      st_goal: `Wochenziel`, st_goal_prog: `{g} von {n} Partien diese Woche`,
+      st_weeks: `Wöchentliche Entwicklung`, st_less: `Weniger Zeit = schneller`, st_this: `Diese Woche`,
+      st_trend_up: `Deine Reaktion hat sich im Vergleich zur Vorwoche um {p} % verbessert! 🚀`,
+      st_trend_down: `Diese Woche bist du etwas langsamer als letzte Woche. Zeit, wieder in Schwung zu kommen!`,
+      st_trend_flat: `Du hältst ein gleichmäßiges Tempo. Weiter so!`,
+      st_nodata: `Spiele ein paar Partien, dann siehst du hier, wie sich deine Reflexe entwickeln.`,
+      tips: [`Jede Partie ist ein kleines Training für Aufmerksamkeit und Reflexe. Regelmäßigkeit macht den Unterschied!`,
+             `Behalte die erste Zahl im Blick und vergiss den Rest: Das schärft deine Konzentration.`,
+             `Jeden Tag ein bisschen zu spielen bringt mehr als an einem Tag sehr viel.`,
+             `Denke schon an die nächste Zahl, während du die aktuelle isst: Das trainiert dein Kurzzeitgedächtnis.`],
       themes: { classic: `Klassisch`, ocean: `Ozean`, sunset: `Sonnenuntergang`, forest: `Wald`, candy: `Bonbon`, night: `Nacht`, neon: `Neon`, gold: `Gold` },
       funny: [`Langsamer als eine Schnecke! 🐌`, `Trainiere mehr deine Daumen! 👍`, `Meine Oma ist schneller! 👵`,
               `Schläfst du? 😴`, `Sogar eine Schildkröte schlägt dich! 🐢`, `Du brauchst mehr Kaffee! ☕`,
@@ -614,7 +895,7 @@
     it: {
       tagline: `Mangia i numeri prima che arrivino al bordo.`,
       record: `Record`, play: `▶ Gioca`, share: `📤 Condividi con un amico`,
-      install: `📲 Installa sul telefono`, howto: `❓ Come si gioca`,
+      install: `📲 Installa`, howto: `❓ Come si gioca`, menu_btn: `🏠 Menu`,
       start_level: `Inizia dal livello`,
       pause_title: `Gioco in pausa`, resume: `▶ Continua`,
       help_title: `Come si gioca?`,
@@ -626,6 +907,8 @@
       help6: `Da computer: ← → per − e +, ↓ per mangiare, ↑ per prendere una sorpresa.`,
       help7: `Serie: ogni 5 numeri di fila senza errori sale il moltiplicatore (fino a ×5). Un errore, o perdere una vita, lo azzera.`,
       help8: `Numero dorato ⭐ = punti ×3. Numero «?» = jolly: si può mangiare con qualsiasi numero.`,
+      help9: `Sfida del giorno: la stessa sequenza di numeri per tutti, ogni giorno. Puoi sfidare un amico con un link.`,
+      help10: `In Statistiche vedi il tuo tempo di reazione e l'andamento settimanale.`,
       ok: `Ho capito`, close: `Chiudi`,
       ios_title: `Installa su iPhone`,
       ios1: `1. Apri questa pagina in <b>Safari</b>.`,
@@ -642,6 +925,37 @@
       ach_eat: `Mangia {n} numeri`, ach_streak: `Serie di {n} di fila`, ach_level: `Raggiungi il livello {n}`,
       ach_score: `Fai {n} punti`, ach_gold: `Mangia {n} numeri dorati`, ach_wild: `Mangia {n} jolly`,
       ach_games: `Gioca {n} partite`,
+      ach_rbest: `Mangia un numero in meno di {s} s`,
+      ach_ravg: `Media sotto {s} s in una partita (almeno {m} numeri)`,
+      ach_days: `Gioca {n} giorni di fila`, ach_daily: `Sfide del giorno completate: {n}`, ach_weeks: `Raggiungi il tuo obiettivo settimanale`,
+      daily_btn: `📅 Sfida del giorno`, daily_todo: `Oggi la stessa partita per tutti`, daily_done: `Oggi: {s} punti ✓`,
+      stats_btn: `📊 Statistiche`,
+      info_streak: `🔥 {d} giorni di fila`, info_week: `🎯 Settimana: {g}/{n}`,
+      ch_banner: `⚔️ Un amico ti sfida: supera {s} punti`, ch_accept: `⚔️ Accetta la sfida`, ch_btn: `⚔️ Sfida un amico`,
+      ch_text: `Ti sfido a Comenum! Supera i miei {s} punti con la stessa sequenza di numeri ⚔️🔢`,
+      ch_tag: `⚔️ Sfida: {s}`, daily_tag: `📅 Sfida del giorno`,
+      ch_passed: `⚔️ Hai battuto il tuo amico!`, ch_won: `🏆 Hai superato la sfida del tuo amico!`,
+      ch_lost: `Ti sono mancati {d} punti per battere il tuo amico.`,
+      daily_share_text: `Comenum #{n} 📅 {s} punti · livello {l}. Riesci a battermi? 🔢`,
+      go_react: `Reazione media`, go_acc: `Precisione`,
+      near_record: `Ti sono mancati solo {d} punti per il record!`,
+      near_level: `Ti mancavano solo {k} numeri per il livello {n}!`,
+      near_ach: `Quasi: ne mancano {k} per «{a}»`,
+      go_streak: `🔥 {d} giorni di fila!`, go_goal: `🎯 Obiettivo settimanale raggiunto!`,
+      go_daily: `📅 Il tuo miglior punteggio nella sfida di oggi: {s}`,
+      stats_title: `Le tue statistiche`,
+      st_react_avg: `Reazione media`, st_react_best: `Reazione migliore`, st_acc: `Precisione`, st_games: `Partite`,
+      st_days: `Giorni di fila`, st_days_best: `migliore: {d}`,
+      st_goal: `Obiettivo settimanale`, st_goal_prog: `{g} partite su {n} questa settimana`,
+      st_weeks: `Andamento settimanale`, st_less: `Meno tempo = più veloce`, st_this: `Questa settimana`,
+      st_trend_up: `La tua reazione è migliorata del {p}% rispetto alla settimana scorsa! 🚀`,
+      st_trend_down: `Questa settimana sei un po' più lento della precedente. È il momento di ritrovare il ritmo!`,
+      st_trend_flat: `Mantieni un ritmo stabile. Continua così!`,
+      st_nodata: `Gioca qualche partita e qui vedrai come evolvono i tuoi riflessi.`,
+      tips: [`Ogni partita è un mini allenamento per attenzione e riflessi. La costanza fa la differenza!`,
+             `Tieni gli occhi sul primo numero e dimentica il resto: affini la concentrazione.`,
+             `Giocare un po' ogni giorno vale più che giocare tanto in un solo giorno.`,
+             `Mentre mangi un numero, pensa al successivo: alleni la memoria rapida.`],
       themes: { classic: `Classico`, ocean: `Oceano`, sunset: `Tramonto`, forest: `Foresta`, candy: `Caramella`, night: `Notte`, neon: `Neon`, gold: `Oro` },
       funny: [`Più lento di una lumaca! 🐌`, `Devi allenare di più i pollici! 👍`, `Mia nonna è più veloce! 👵`,
               `Dormi o cosa? 😴`, `Anche una tartaruga ti batte! 🐢`, `Ti serve più caffè! ☕`,
@@ -650,7 +964,7 @@
     pt: {
       tagline: `Coma os números antes que cheguem à borda.`,
       record: `Recorde`, play: `▶ Jogar`, share: `📤 Compartilhar com um amigo`,
-      install: `📲 Instalar no celular`, howto: `❓ Como jogar`,
+      install: `📲 Instalar`, howto: `❓ Como jogar`, menu_btn: `🏠 Menu`,
       start_level: `Começar no nível`,
       pause_title: `Jogo pausado`, resume: `▶ Continuar`,
       help_title: `Como jogar?`,
@@ -662,6 +976,8 @@
       help6: `No computador: ← → para − e +, ↓ para comer, ↑ para pegar uma surpresa.`,
       help7: `Sequências: a cada 5 números seguidos sem errar, o multiplicador sobe (até ×5). Um erro, ou perder uma vida, zera tudo.`,
       help8: `Número dourado ⭐ = pontos ×3. Número «?» = curinga: pode ser comido com qualquer número.`,
+      help9: `Desafio diário: a mesma sequência de números para todos, a cada dia. Você pode desafiar um amigo com um link.`,
+      help10: `Em Estatísticas você vê seu tempo de reação e sua evolução semanal.`,
       ok: `Entendi`, close: `Fechar`,
       ios_title: `Instalar no iPhone`,
       ios1: `1. Abra esta página no <b>Safari</b>.`,
@@ -678,6 +994,37 @@
       ach_eat: `Coma {n} números`, ach_streak: `Sequência de {n} seguidos`, ach_level: `Chegue ao nível {n}`,
       ach_score: `Faça {n} pontos`, ach_gold: `Coma {n} números dourados`, ach_wild: `Coma {n} curingas`,
       ach_games: `Jogue {n} partidas`,
+      ach_rbest: `Coma um número em menos de {s} s`,
+      ach_ravg: `Média abaixo de {s} s em uma partida (mínimo de {m} números)`,
+      ach_days: `Jogue {n} dias seguidos`, ach_daily: `Desafios diários concluídos: {n}`, ach_weeks: `Cumpra sua meta semanal`,
+      daily_btn: `📅 Desafio diário`, daily_todo: `A mesma partida para todos hoje`, daily_done: `Hoje: {s} pontos ✓`,
+      stats_btn: `📊 Estatísticas`,
+      info_streak: `🔥 {d} dias seguidos`, info_week: `🎯 Semana: {g}/{n}`,
+      ch_banner: `⚔️ Um amigo te desafia: supere {s} pontos`, ch_accept: `⚔️ Aceitar o desafio`, ch_btn: `⚔️ Desafiar um amigo`,
+      ch_text: `Eu te desafio no Comenum! Supere meus {s} pontos com a mesma sequência de números ⚔️🔢`,
+      ch_tag: `⚔️ Desafio: {s}`, daily_tag: `📅 Desafio diário`,
+      ch_passed: `⚔️ Você superou seu amigo!`, ch_won: `🏆 Você superou o desafio do seu amigo!`,
+      ch_lost: `Faltaram {d} pontos para superar seu amigo.`,
+      daily_share_text: `Comenum #{n} 📅 {s} pontos · nível {l}. Consegue me superar? 🔢`,
+      go_react: `Reação média`, go_acc: `Precisão`,
+      near_record: `Faltaram só {d} pontos para o seu recorde!`,
+      near_level: `Faltavam só {k} números para o nível {n}!`,
+      near_ach: `Quase: faltam {k} para «{a}»`,
+      go_streak: `🔥 {d} dias seguidos!`, go_goal: `🎯 Meta semanal cumprida!`,
+      go_daily: `📅 Sua melhor pontuação no desafio de hoje: {s}`,
+      stats_title: `Suas estatísticas`,
+      st_react_avg: `Reação média`, st_react_best: `Melhor reação`, st_acc: `Precisão`, st_games: `Partidas`,
+      st_days: `Dias seguidos`, st_days_best: `melhor: {d}`,
+      st_goal: `Meta semanal`, st_goal_prog: `{g} de {n} partidas esta semana`,
+      st_weeks: `Evolução semanal`, st_less: `Menos tempo = mais rápido`, st_this: `Esta semana`,
+      st_trend_up: `Sua reação melhorou {p}% em relação à semana passada! 🚀`,
+      st_trend_down: `Esta semana você está um pouco mais lento que na anterior. Bom momento para retomar o ritmo!`,
+      st_trend_flat: `Você mantém um ritmo estável. Continue assim!`,
+      st_nodata: `Jogue algumas partidas e aqui você verá como seus reflexos evoluem.`,
+      tips: [`Cada partida é um mini treino de atenção e reflexos. A constância faz a diferença!`,
+             `Mantenha os olhos no primeiro número e esqueça o resto: isso afina sua concentração.`,
+             `Jogar um pouco todo dia rende mais do que jogar muito em um único dia.`,
+             `Enquanto come um número, pense no próximo: assim você treina a memória rápida.`],
       themes: { classic: `Clássico`, ocean: `Oceano`, sunset: `Pôr do sol`, forest: `Floresta`, candy: `Doce`, night: `Noite`, neon: `Neon`, gold: `Ouro` },
       funny: [`Mais lento que uma lesma! 🐌`, `Treine mais esses polegares! 👍`, `Minha avó é mais rápida! 👵`,
               `Está dormindo? 😴`, `Até uma tartaruga ganha de você! 🐢`, `Você precisa de mais café! ☕`,
@@ -700,11 +1047,15 @@
     if (vars) for (const k in vars) s = s.replace('{' + k + '}', vars[k]);
     return s;
   }
+  const secNum = ms => (ms / 1000).toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtSec = ms => secNum(ms) + ' s';
   function applyLang() {
     T = I18N[lang];
     document.documentElement.lang = lang;
     document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
     $('langSel').value = lang;
+    updateScoreLabel();
+    refreshStart();
   }
   (function buildLangSelect() {
     const sel = $('langSel');
@@ -716,16 +1067,20 @@
   })();
 
   // ---------- Estado ----------
-  let S = newState(1);
-  function newState(lv) {
+  let S = newState(1, 'normal', 'x');
+  function newState(lv, mode, seed) {
     return {
       playing: false, paused: false, helpPaused: false,
+      mode: mode || 'normal', seed: seed || 'x', rng: mulberry32(hashStr(seed || 'x')),
+      startLv: lv, target: 0, passed: false,
       score: 0, level: lv, lives: 3, player: 1, time: 0,
       eaten: 0, goal: 10 + (lv - 1) * 5,
       streak: 0, bestStreak: 0,
       numbers: [], dist: SPACING, breath: 0,
       speedMult: 1, effectLeft: 0, effectKey: '',
-      surprises: [], nextSurprise: 8
+      surprises: [], nextSurprise: 8,
+      curFirst: null, firstSince: 0,
+      rn: 0, rsum: 0, rbest: 0, ok: 0, bad: 0
     };
   }
 
@@ -786,6 +1141,12 @@
 
   // ---------- Interfaz ----------
   const fmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  function mk(tag, cls, txt) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt !== undefined) e.textContent = txt;
+    return e;
+  }
   function mult() { return Math.min(MAX_MULT, 1 + Math.floor(S.streak / COMBO_STEP)); }
   function updateCombo(pulse) {
     const el = $('combo');
@@ -798,6 +1159,14 @@
       el.classList.remove('on');
     }
     if (pulse) { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
+  }
+  function updateScoreLabel() {
+    let s = t('score');
+    if (S.playing || S.score > 0) {
+      if (S.mode === 'daily') s += '  ·  ' + t('daily_tag');
+      else if (S.mode === 'challenge') s += '  ·  ' + t('ch_tag', { s: S.target });
+    }
+    $('scoreLbl').textContent = s;
   }
   function hud() {
     $('lives').textContent = S.lives;
@@ -837,17 +1206,34 @@
   function close(id) { $(id).classList.remove('open'); }
   function updateSoundIcon() { $('btnSound').textContent = muted ? '🔇' : '🔊'; }
 
-  // Pantalla de inicio: récord y selector de nivel
+  // Pantalla de inicio: récord, rachas, reto diario, reto de amigo y selector de nivel
   function refreshStart() {
     startLevel = 1;
     $('bestStart').textContent = best;
     $('lvVal').textContent = startLevel;
     $('levelPick').classList.toggle('hidden', maxLevel <= 1);
+    const parts = [];
+    const ds = currentDayStreak();
+    if (ds > 0) parts.push(t('info_streak', { d: ds }));
+    const wk = weeks[weekKey()];
+    parts.push(t('info_week', { g: wk ? wk.games : 0, n: goal }));
+    $('startInfo').textContent = parts.join('  ·  ');
+    const doneToday = dailyRec.date === dateKey() && dailyRec.plays > 0;
+    $('dailySub').textContent = doneToday ? t('daily_done', { s: dailyRec.best }) : t('daily_todo');
+    const b = $('chBanner');
+    if (pendingChallenge) {
+      b.classList.remove('hidden');
+      $('chText').textContent = t('ch_banner', { s: pendingChallenge.score });
+    } else {
+      b.classList.add('hidden');
+    }
   }
 
   // ---------- Logros ----------
-  const achText = a => t('ach_' + a.type, { n: a.n.toLocaleString(lang) });
-  function achValue(type) {
+  function achText(a) {
+    return t('ach_' + a.type, { n: a.n.toLocaleString(lang), s: secNum(a.n), m: a.min || 0 });
+  }
+  function achCur(type) {
     switch (type) {
       case 'eat':    return stats.eaten;
       case 'streak': return Math.max(stats.streak, S.bestStreak || 0);
@@ -856,12 +1242,16 @@
       case 'gold':   return stats.gold;
       case 'wild':   return stats.wild;
       case 'games':  return stats.games;
+      case 'days':   return Math.max(days.best, days.streak);
+      case 'daily':  return stats.daily;
+      case 'weeks':  return stats.weeksDone;
     }
     return 0;
   }
-  function saveStats() {
-    stats.streak = Math.max(stats.streak, S.bestStreak || 0);
-    lsSet('comenum_stats', JSON.stringify(stats));
+  function achDone(a) {
+    if (a.type === 'rbest') return stats.rbest > 0 && stats.rbest <= a.n;
+    if (a.type === 'ravg')  return S.rn >= a.min && (S.rsum / S.rn) <= a.n;
+    return achCur(a.type) >= a.n;
   }
   let achQueue = [], achBusy = false;
   function showAch(msg) { achQueue.push(msg); if (!achBusy) nextAch(); }
@@ -878,7 +1268,7 @@
     let changed = false;
     ACHS.forEach(a => {
       if (unlocked.has(a.id)) return;
-      if (achValue(a.type) >= a.n) {
+      if (achDone(a)) {
         unlocked.add(a.id);
         changed = true;
         let msg = '🏆 ' + achText(a);
@@ -890,7 +1280,7 @@
     });
     if (changed) {
       lsSet('comenum_ach', JSON.stringify([...unlocked]));
-      saveStats();
+      saveAll();
     }
   }
   function selectTheme(id) {
@@ -949,15 +1339,98 @@
     $('achCount').textContent = n + ' / ' + ACHS.length + ' 🏆';
   }
 
+  // ---------- Panel de estadísticas ----------
+  function weekLabel(k) {
+    const p = k.split('-').map(Number);
+    return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString(lang, { day: '2-digit', month: '2-digit' });
+  }
+  function renderStats() {
+    const box = $('statsBody');
+    box.innerHTML = '';
+    const tips = T.tips || I18N.en.tips;
+    box.appendChild(mk('div', 'tip', '💡 ' + tips[dayNumber() % tips.length]));
+
+    const avg = stats.rn > 0 ? stats.rsum / stats.rn : 0;
+    const tot = stats.ok + stats.bad;
+    const grid = mk('div', 'metrics');
+    [
+      [avg ? fmtSec(avg) : '—', 'st_react_avg'],
+      [stats.rbest ? fmtSec(stats.rbest) : '—', 'st_react_best'],
+      [tot ? Math.round(stats.ok / tot * 100) + '%' : '—', 'st_acc'],
+      [String(stats.games), 'st_games']
+    ].forEach(it => {
+      const m = mk('div', 'metric');
+      m.appendChild(mk('b', '', it[0]));
+      m.appendChild(mk('span', '', t(it[1])));
+      grid.appendChild(m);
+    });
+    box.appendChild(grid);
+
+    // Racha de días
+    const ds = currentDayStreak();
+    box.appendChild(mk('div', 'sec', '🔥 ' + t('st_days') + ': ' + ds + '  (' + t('st_days_best', { d: Math.max(days.best, ds) }) + ')'));
+
+    // Objetivo semanal
+    box.appendChild(mk('div', 'sec', '🎯 ' + t('st_goal')));
+    const wk = weeks[weekKey()];
+    const games = wk ? wk.games : 0;
+    const bar = mk('div', 'bar');
+    const fill = document.createElement('i');
+    fill.style.width = Math.min(100, games / goal * 100) + '%';
+    bar.appendChild(fill);
+    box.appendChild(bar);
+    box.appendChild(mk('p', 'info', t('st_goal_prog', { g: games, n: goal })));
+    const chips = mk('div', 'chips');
+    GOALS.forEach(n => {
+      const c = mk('button', 'chip' + (n === goal ? ' sel' : ''), String(n));
+      c.addEventListener('click', () => {
+        goal = n; lsSet('comenum_goal', String(n));
+        sfx('button'); renderStats(); refreshStart();
+      });
+      chips.appendChild(c);
+    });
+    box.appendChild(chips);
+
+    // Evolución semanal
+    box.appendChild(mk('div', 'sec', '📈 ' + t('st_weeks')));
+    const keys = Object.keys(weeks).filter(k => weeks[k].n > 0).sort().reverse().slice(0, 6);
+    if (!keys.length) {
+      box.appendChild(mk('p', '', t('st_nodata')));
+    } else {
+      const maxAvg = Math.max.apply(null, keys.map(k => weeks[k].sum / weeks[k].n));
+      keys.forEach(k => {
+        const w = weeks[k], a = w.sum / w.n;
+        const row = mk('div', 'wk');
+        row.appendChild(mk('span', 'l', k === weekKey() ? t('st_this') : weekLabel(k)));
+        const b2 = mk('div', 'bar');
+        const f2 = document.createElement('i');
+        f2.style.width = Math.max(8, a / maxAvg * 100) + '%';
+        b2.appendChild(f2);
+        row.appendChild(b2);
+        row.appendChild(mk('span', 'v', fmtSec(a)));
+        box.appendChild(row);
+      });
+      box.appendChild(mk('div', 'cnt', t('st_less')));
+      const cur = weeks[weekKey()];
+      const prevKey = Object.keys(weeks).sort().reverse().find(k => k !== weekKey() && weeks[k].n >= 10);
+      if (cur && cur.n >= 10 && prevKey) {
+        const ca = cur.sum / cur.n, pa = weeks[prevKey].sum / weeks[prevKey].n;
+        const p = Math.round((pa - ca) / pa * 100);
+        box.appendChild(mk('div', 'tip', p >= 3 ? t('st_trend_up', { p: p }) : (p <= -3 ? t('st_trend_down') : t('st_trend_flat'))));
+      }
+    }
+  }
+
   // ---------- Números ----------
   function spawnNumber(overshoot) {
+    const rnd = S.rng;
     const el = document.createElement('div');
-    const r = Math.random();
+    const r = rnd();
     let kind = 'normal';
     if (r < P_WILD) kind = 'wild';
     else if (r < P_WILD + P_GOLD) kind = 'gold';
     el.className = 'num' + (kind !== 'normal' ? ' ' + kind : '');
-    const v = kind === 'wild' ? -1 : Math.floor(Math.random() * 10);
+    const v = kind === 'wild' ? -1 : Math.floor(rnd() * 10);
     el.textContent = kind === 'wild' ? '?' : v;
     $('strip').appendChild(el);
     const x = $('strip').clientWidth - NUM - 6 - overshoot;
@@ -1002,24 +1475,51 @@
       sfx('level');
     }
   }
+  function checkChallenge() {
+    if (S.mode === 'challenge' && !S.passed && S.target > 0 && S.score > S.target) {
+      S.passed = true;
+      toast(t('ch_passed'), 'good');
+    }
+  }
+  function recordHit(ms) {
+    S.ok++; stats.ok++;
+    const w = curWeek();
+    w.ok++;
+    if (ms >= MIN_REACT) {
+      ms = Math.min(ms, MAX_REACT);
+      S.rn++; S.rsum += ms; if (!S.rbest || ms < S.rbest) S.rbest = ms;
+      stats.rn++; stats.rsum += ms; if (!stats.rbest || ms < stats.rbest) stats.rbest = ms;
+      w.n++; w.sum += ms;
+    }
+    if (S.ok === 1) touchDay();
+  }
+  function recordMiss() {
+    S.bad++; stats.bad++;
+    curWeek().bad++;
+  }
   function eat() {
     if (!S.playing || S.paused) return;
     const n = S.numbers[0];
+    if (!n) return;   // no hay nada que comer: no cuenta como fallo
     const d = $('display');
     d.classList.remove('ok', 'bad'); void d.offsetWidth;
-    if (n && (n.kind === 'wild' || n.v === S.player)) {
+    if (n.kind === 'wild' || n.v === S.player) {
+      const ms = (S.curFirst === n) ? Math.round((S.time - S.firstSince) * 1000) : -1;
       removeNumber(0);
       const before = mult();
       const pts = awardNumber(n, true);
       const after = mult();
+      recordHit(ms);
       sfx(n.kind === 'gold' ? 'gold' : 'eat');
       if (after > before) sfx('combo');
       d.classList.add('ok');
       popPoints('+' + pts, n.kind === 'gold' ? 'gold' : '');
       updateCombo(after > before);
       checkLevel();
+      checkChallenge();
       checkAchievements();
     } else {
+      recordMiss();
       sfx('wrong');
       vibrate(40);
       d.classList.add('bad');
@@ -1094,12 +1594,13 @@
         for (let k = 0; k < 4 && S.numbers.length; k++) {
           const n = S.numbers[0];
           removeNumber(0);
-          total += awardNumber(n, false);   // da puntos, pero no suma racha
+          total += awardNumber(n, false);   // da puntos, pero no suma racha ni reacción
         }
         if (total > 0) popPoints('+' + total);
         checkLevel();
-        checkAchievements();
         toast(t('eaten'), 'good');
+        checkChallenge();
+        checkAchievements();
         break;
       }
     }
@@ -1144,6 +1645,10 @@
       }
     }
 
+    // Reacción: momento en que un número pasa a ser el primero de la fila
+    const f = S.numbers[0] || null;
+    if (f !== S.curFirst) { S.curFirst = f; S.firstSince = S.time; }
+
     // ¿Algún número toca el borde izquierdo?
     if (S.numbers.length && S.numbers[0].x <= 0) {
       loseLife();
@@ -1166,48 +1671,128 @@
   }
 
   // ---------- Flujo de partida ----------
-  function startGame() {
+  function startGame(mode) {
     ensureAudio();
     clearNumbers();
     S.surprises.forEach(s => s.el.remove());
-    const lv = Math.min(Math.max(1, startLevel), maxLevel);
-    S = newState(lv);
+    let lv = 1, seed, target = 0;
+    if (mode === 'daily') {
+      seed = 'daily-' + dateKey();
+    } else if (mode === 'challenge' && pendingChallenge) {
+      lv = pendingChallenge.lv; seed = pendingChallenge.seed; target = pendingChallenge.score;
+      pendingChallenge = null;
+      clearHash();
+    } else {
+      mode = 'normal';
+      lv = Math.min(Math.max(1, startLevel), maxLevel);
+      seed = randomSeed();
+    }
+    S = newState(lv, mode, seed);
+    S.target = target;
     S.playing = true;
     lastSec = -1;
     $('time').textContent = '00:00';
     $('effect').textContent = '';
     setBackground(S.level);
+    updateScoreLabel();
     hud();
-    ['ovStart', 'ovOver', 'ovPause', 'ovAch'].forEach(close);
+    ['ovStart', 'ovOver', 'ovPause', 'ovAch', 'ovStats'].forEach(close);
     startMusic();
-    track('game-start', 'Partida iniciada');
+    track(mode === 'normal' ? 'game-start' : 'game-start/' + mode, 'Partida iniciada (' + mode + ')');
   }
+
+  function nearMisses(prevBest, isRecord) {
+    const out = [];
+    if (!isRecord && prevBest > 0 && S.score < prevBest && S.score >= prevBest * 0.8) {
+      out.push(t('near_record', { d: prevBest - S.score }));
+    }
+    const left = S.goal - S.eaten;
+    if (left > 0 && left <= 3 && S.eaten > 0) out.push(t('near_level', { k: left, n: S.level + 1 }));
+    let bestA = null, bestR = 0;
+    ACHS.forEach(a => {
+      if (unlocked.has(a.id) || a.type === 'rbest' || a.type === 'ravg') return;
+      const r = achCur(a.type) / a.n;
+      if (r >= 0.8 && r < 1 && r > bestR) { bestR = r; bestA = a; }
+    });
+    if (bestA) out.push(t('near_ach', { k: Math.ceil(bestA.n - achCur(bestA.type)), a: achText(bestA) }));
+    return out.slice(0, 2);
+  }
+
   function showGameOver() {
     sfx('over');
+    const prevBest = best;
     const isRecord = S.score > best;
     if (isRecord) { best = S.score; lsSet('comenum_best', String(best)); }
     if (S.level > maxLevel) maxLevel = S.level;
     lsSet('comenum_maxlevel', String(maxLevel));
     stats.games++;
+
+    // Objetivo semanal
+    const w = curWeek();
+    w.games++;
+    let goalHit = false;
+    if (!w.done && w.games >= goal) { w.done = true; stats.weeksDone++; goalHit = true; }
+
+    // Reto diario
+    if (S.mode === 'daily') {
+      const today = dateKey();
+      if (dailyRec.date !== today) dailyRec = { date: today, best: 0, plays: 0 };
+      if (dailyRec.plays === 0) stats.daily++;
+      dailyRec.plays++;
+      dailyRec.best = Math.max(dailyRec.best, S.score);
+    }
+
     checkAchievements();
-    saveStats();
+    saveAll();
+
     $('finalScore').textContent = S.score;
     $('finalLevel').textContent = S.level;
     $('finalTime').textContent = fmt(S.time);
     $('finalStreak').textContent = S.bestStreak;
     $('finalBest').textContent = best;
     $('newRecord').classList.toggle('hidden', !isRecord);
+
+    // Reacción y precisión de la partida
+    const gr = $('goReact');
+    if (S.rn > 0) {
+      const acc = (S.ok + S.bad) > 0 ? Math.round(S.ok / (S.ok + S.bad) * 100) : 100;
+      gr.textContent = '⏱️ ' + t('go_react') + ': ' + fmtSec(S.rsum / S.rn) + '  ·  🎯 ' + t('go_acc') + ': ' + acc + '%';
+      gr.classList.remove('hidden');
+    } else {
+      gr.classList.add('hidden');
+    }
+
+    // Mensajes (reto, racha, «casi»…)
+    const msgs = [];
+    if (S.mode === 'challenge' && S.target > 0) {
+      msgs.push(S.score > S.target ? t('ch_won') : t('ch_lost', { d: S.target + 1 - S.score }));
+    }
+    if (S.mode === 'daily') msgs.push(t('go_daily', { s: dailyRec.best }));
+    if (goalHit) msgs.push(t('go_goal'));
+    const ds = currentDayStreak();
+    if (ds >= 2) msgs.push(t('go_streak', { d: ds }));
+    nearMisses(prevBest, isRecord).forEach(m => msgs.push(m));
+    const box = $('goMsgs');
+    box.innerHTML = '';
+    msgs.slice(0, 4).forEach(m => box.appendChild(mk('p', '', m)));
+
+    $('btnChallenge').classList.toggle('hidden', S.score <= 0);
     open('ovOver');
     track('game-over/level-' + S.level, 'Fin de partida en nivel ' + S.level);
   }
   function playAgain() {
     close('ovOver');
     refreshStart();
-    if (maxLevel > 1) {
+    if (maxLevel > 1 || S.mode !== 'normal') {
       open('ovStart');   // permite elegir el nivel de inicio
     } else {
-      startGame();
+      startGame('normal');
     }
+  }
+  function goMenu() {
+    close('ovOver');
+    refreshStart();
+    open('ovStart');
   }
   function pauseGame() {
     if (!S.playing || S.paused) return;
@@ -1229,15 +1814,27 @@
   }
 
   // ---------- Compartir ----------
-  async function share(score) {
-    track('share', 'Compartir');
-    const url = location.href.split('#')[0];
-    const text = score > 0 ? t('share_text_score', { s: score }) : t('share_text');
+  const baseUrl = () => location.href.split('#')[0];
+  async function doShare(text, url, evt) {
+    track(evt, evt);
     if (navigator.share) {
       try { await navigator.share({ title: 'Comenum', text, url }); } catch (e) {}
     } else {
       window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank');
     }
+  }
+  function shareStart() {
+    doShare(best > 0 ? t('share_text_score', { s: best }) : t('share_text'), baseUrl(), 'share');
+  }
+  function shareScore() {
+    const text = S.mode === 'daily'
+      ? t('daily_share_text', { n: dayNumber(), s: S.score, l: S.level })
+      : t('share_text_score', { s: S.score });
+    doShare(text, baseUrl(), 'share');
+  }
+  function shareChallenge() {
+    const url = baseUrl() + '#c=' + S.seed + '.' + S.score + '.' + S.startLv;
+    doShare(t('ch_text', { s: S.score }), url, 'challenge-share');
   }
 
   // ---------- Instalación (PWA) ----------
@@ -1274,8 +1871,12 @@
   press($('plus'), () => change(1));
   press($('display'), eat);
 
-  $('btnPlay').addEventListener('click', startGame);
+  $('btnPlay').addEventListener('click', () => startGame('normal'));
+  $('btnDaily').addEventListener('click', () => startGame('daily'));
+  $('btnAccept').addEventListener('click', () => startGame('challenge'));
   $('btnAgain').addEventListener('click', playAgain);
+  $('btnMenu').addEventListener('click', () => { sfx('button'); goMenu(); });
+  $('btnChallenge').addEventListener('click', shareChallenge);
   $('lvMinus').addEventListener('click', () => {
     startLevel = Math.max(1, startLevel - 1);
     $('lvVal').textContent = startLevel;
@@ -1294,8 +1895,10 @@
   $('btnIOSClose').addEventListener('click', () => close('ovIOS'));
   $('btnAch').addEventListener('click', () => { ensureAudio(); sfx('button'); renderAch(); open('ovAch'); });
   $('btnAchClose').addEventListener('click', () => { sfx('button'); close('ovAch'); });
-  $('btnShareStart').addEventListener('click', () => share(best));
-  $('btnShareOver').addEventListener('click', () => share(S.score));
+  $('btnStats').addEventListener('click', () => { ensureAudio(); sfx('button'); renderStats(); open('ovStats'); track('stats-open', 'Abre estadísticas'); });
+  $('btnStatsClose').addEventListener('click', () => { sfx('button'); close('ovStats'); refreshStart(); });
+  $('btnShareStart').addEventListener('click', shareStart);
+  $('btnShareOver').addEventListener('click', shareScore);
   $('btnSound').addEventListener('click', () => {
     ensureAudio();
     muted = !muted;
@@ -1310,9 +1913,20 @@
     track('lang/' + lang, 'Idioma ' + lang);
   });
 
+  // Si llega un enlace de reto con la página ya abierta
+  window.addEventListener('hashchange', () => {
+    const c = parseChallenge();
+    if (c && !S.playing) {
+      pendingChallenge = c;
+      close('ovOver');
+      refreshStart();
+      open('ovStart');
+    }
+  });
+
   // Pausa automática: llamadas, cambio de app, bloqueo de pantalla, avisos flotantes
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { saveStats(); pauseGame(); } });
-  window.addEventListener('pagehide', () => { saveStats(); pauseGame(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { saveAll(); pauseGame(); } });
+  window.addEventListener('pagehide', () => { saveAll(); pauseGame(); });
   window.addEventListener('blur', pauseGame);
 
   // Teclado (ordenador): ← − | → + | ↓ comer | ↑ coger sorpresa | P pausa
@@ -1350,7 +1964,6 @@
   // ---------- Arranque ----------
   applyLang();
   applyTheme();
-  refreshStart();
   updateSoundIcon();
   hud();
   requestAnimationFrame(loop);
