@@ -46,6 +46,22 @@
   @keyframes drise { from { transform: translateY(0) rotate(0deg); } to { transform: translateY(-115vh) rotate(180deg); } }
   @media (prefers-reduced-motion: reduce) { .dp { animation: none; opacity: .25; } }
 
+  /* Efectos (partículas y aros) */
+  #fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 45; }
+  .pt {
+    position: absolute; border-radius: 50%; opacity: 0;
+    animation: ptFly .6s ease-out forwards; will-change: transform, opacity;
+  }
+  @keyframes ptFly {
+    0%   { opacity: .9; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.3); }
+  }
+  .ring {
+    position: absolute; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%;
+    border: 4px solid rgba(255,255,255,.75); animation: ringGo .9s ease-out forwards;
+  }
+  @keyframes ringGo { from { opacity: .9; transform: scale(.3); } to { opacity: 0; transform: scale(4.2); } }
+
   /* Barra superior */
   .topbar {
     position: relative; z-index: 1;
@@ -109,20 +125,30 @@
     content: "★"; position: absolute; top: -6px; right: -3px; font-size: 15px; color: #fff;
     text-shadow: 0 0 4px #ff9800, 0 0 2px #000;
   }
+  .num.ice {
+    background: linear-gradient(135deg, #e1f5fe, #4fc3f7); color: #01579b; text-shadow: none;
+    box-shadow: 0 0 12px rgba(129,212,250,.95), 0 3px 8px rgba(0,0,0,.25);
+  }
+  .num.ice::after {
+    content: "❄"; position: absolute; top: -6px; right: -3px; font-size: 15px; color: #fff;
+    text-shadow: 0 0 4px #0288d1, 0 0 2px #014f86;
+  }
   body.cb .num.gold::after { font-size: 20px; top: -9px; right: -5px; }
+  body.cb .num.ice::after { font-size: 20px; top: -9px; right: -5px; }
   .num.wild {
     background: conic-gradient(#ff5e62, #ffd200, #43e97b, #4facfe, #a18cd1, #ff5e62);
     font-size: calc(var(--nf, 21px) + 3px);
   }
   .num.first { box-shadow: 0 0 0 3px #fff, 0 0 14px rgba(255,255,255,.9); }
   .num.gold.first { box-shadow: 0 0 0 3px #fff, 0 0 16px rgba(255,215,0,.95); }
+  .num.ice.first { box-shadow: 0 0 0 3px #fff, 0 0 16px rgba(129,212,250,.95); }
   .num.pv { position: static; flex: none; }
 
   /* Zona de juego (sorpresas) */
   #area { position: relative; flex: 1; }
   #effect {
-    position: absolute; top: 8px; left: 0; right: 0; text-align: center;
-    font-weight: 800; font-size: 15px; text-shadow: 0 2px 6px rgba(0,0,0,.4);
+    position: absolute; top: 8px; left: 0; right: 0; text-align: center; padding: 0 8px;
+    font-weight: 800; font-size: 14px; line-height: 1.3; text-shadow: 0 2px 6px rgba(0,0,0,.4);
   }
   .sup {
     position: absolute; width: 56px; height: 56px; border-radius: 50%;
@@ -132,6 +158,7 @@
     animation: floaty 1.6s ease-in-out infinite;
     cursor: pointer;
   }
+  .sup.txt { font-size: 24px; font-weight: 900; color: #b36b00; }
   @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
   .pts {
     position: absolute; left: 50%; bottom: 6px; pointer-events: none;
@@ -143,6 +170,38 @@
     0%   { opacity: 0; transform: translate(-50%, 10px) scale(.7); }
     20%  { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
     100% { opacity: 0; transform: translate(-50%, -42px) scale(1); }
+  }
+
+  /* Personaje (aparece al perder una vida) */
+  #chara {
+    position: absolute; left: 50%; top: 24%; z-index: 6; width: min(94%, 390px);
+    display: flex; align-items: center; gap: 12px; pointer-events: none;
+    transform: translateX(-50%); opacity: 0;
+  }
+  #chara.show { animation: charaAnim 2.3s forwards; }
+  @keyframes charaAnim {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(16px) scale(.9); }
+    12%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.03); }
+    18%  { transform: translateX(-50%) translateY(0) scale(1); }
+    88%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-6px) scale(1); }
+  }
+  #chara .av {
+    position: relative; flex: none; width: 76px; height: 76px; border-radius: 50%; overflow: hidden;
+    background: #cfe8f7; border: 3px solid #fff; box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  }
+  #chara .av svg { width: 100%; height: 100%; display: block; }
+  #chara .av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+  #chara .av.hasimg img { display: block; }
+  #chara .av.hasimg svg { display: none; }
+  #chara .bub {
+    position: relative; flex: 1; background: #fff; color: #2b2150; padding: 12px 14px;
+    border-radius: 18px; font-size: 16px; font-weight: 800; line-height: 1.3;
+    box-shadow: 0 8px 20px rgba(0,0,0,.3);
+  }
+  #chara .bub::before {
+    content: ""; position: absolute; left: -9px; top: 50%; margin-top: -9px;
+    border: 9px solid transparent; border-left: 0; border-right-color: #fff;
   }
 
   /* Tutorial */
@@ -381,6 +440,25 @@
 
   <div id="area">
     <div id="effect"></div>
+    <div id="chara" class="hidden">
+      <div class="av" id="charaAv">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="64" height="64" fill="#cfe8f7"/>
+          <path d="M14 40c-3-17 6-30 18-30s21 13 18 30c-1 6-3 9-5 11H19c-2-2-4-5-5-11z" fill="#8a4b1f"/>
+          <path d="M6 64c1-10 9-15 18-16h16c9 1 17 6 18 16z" fill="#1f1f29"/>
+          <path d="M26 48l6 9 6-9z" fill="#ffffff"/>
+          <rect x="28" y="40" width="8" height="10" rx="3" fill="#efbb92"/>
+          <ellipse cx="32" cy="29" rx="12" ry="14" fill="#f4c9a4"/>
+          <path d="M19 28c0-11 7-16 14-16 7 0 12 6 12 15-4-3-9-8-12-9-4 5-9 8-14 10z" fill="#8a4b1f"/>
+          <ellipse cx="27" cy="30" rx="1.8" ry="2.2" fill="#2b2150"/>
+          <ellipse cx="37" cy="30" rx="1.8" ry="2.2" fill="#2b2150"/>
+          <path d="M24 26q3-2 6 0M34 26q3-2 6 0" stroke="#6b3a17" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+          <path d="M28 36q4 3 8 0" stroke="#b5483c" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </svg>
+        <img src="personaje.png" alt="" onload="this.parentNode.classList.add('hasimg')" onerror="this.remove()">
+      </div>
+      <div class="bub" id="charaTxt"></div>
+    </div>
     <div id="tutHint" class="hidden">
       <div id="tutText"></div>
       <button class="btn hidden" id="tutNext" data-i18n="tut_go"></button>
@@ -394,6 +472,7 @@
     <div id="display"><span id="dispNum">1</span></div>
   </div>
 
+  <div id="fx"></div>
   <div id="toast"></div>
   <div id="achToast"></div>
 
@@ -461,6 +540,7 @@
         <li data-i18n="help5"></li>
         <li data-i18n="help7"></li>
         <li data-i18n="help8"></li>
+        <li data-i18n="help11"></li>
         <li data-i18n="help9"></li>
         <li data-i18n="help10"></li>
         <li data-i18n="help6"></li>
@@ -523,7 +603,7 @@
     <div class="card">
       <h3 data-i18n="set_title"></h3>
       <div class="prev">
-        <span class="num pv">3</span><span class="num pv">7</span><span class="num pv gold">9</span><span class="num pv wild">?</span>
+        <span class="num pv">3</span><span class="num pv">7</span><span class="num pv gold">9</span><span class="num pv ice">5</span><span class="num pv wild">?</span>
       </div>
       <div class="posrow">
         <div class="lab" data-i18n="pos_label"></div>
@@ -540,6 +620,10 @@
       <div class="posrow">
         <div class="lab" data-i18n="cb_label"></div>
         <div class="chips" id="cbChips"></div>
+      </div>
+      <div class="posrow">
+        <div class="lab" data-i18n="fx_label"></div>
+        <div class="chips" id="fxChips"></div>
       </div>
       <button class="btn ghost" id="btnTutAgain" data-i18n="tut_replay"></button>
       <button class="btn" id="btnSettingsClose" data-i18n="close"></button>
@@ -590,6 +674,13 @@
   const MAX_MULT = 5;        // multiplicador máximo
   const P_WILD = 0.06;       // probabilidad de comodín
   const P_GOLD = 0.09;       // probabilidad de número dorado
+  const P_ICE = 0.055;       // probabilidad de que un número normal sea de hielo
+  const ICE_SECS = 6;        // duración del hielo (todo a media velocidad)
+  const ICE_FACTOR = 0.55;   // velocidad durante el hielo
+  const DBL_SECS = 8;        // duración de la sorpresa ×2 puntos
+  const TWIN_SECS = 7;       // duración de la sorpresa «doble bocado»
+  const FREEZE_SECS = 2.3;   // pausa tras perder una vida (sale el personaje)
+  const FX_MAX = 60;         // máximo de partículas a la vez
   const MIN_REACT = 120;     // ms: tiempos menores se descartan (medición poco fiable)
   const MAX_REACT = 8000;    // ms: tiempos mayores se recortan para no distorsionar la media
   const GOALS = [5, 10, 20]; // objetivos semanales posibles (partidas)
@@ -747,6 +838,8 @@
   let lefty = lsGet('comenum_lefty') === '1';
   let nsize = ['0', '1', '2'].includes(lsGet('comenum_nsize')) ? parseInt(lsGet('comenum_nsize')) : 0;
   let cbMode = lsGet('comenum_cb') === '1';
+  const reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  let fxOn = lsGet('comenum_fx') === null ? !reducedMotion : lsGet('comenum_fx') === '1';
   let stats = Object.assign({ eaten: 0, games: 0, gold: 0, wild: 0, streak: 0,
                               rn: 0, rsum: 0, rbest: 0, ok: 0, bad: 0, daily: 0, weeksDone: 0 }, jsonGet('comenum_stats', {}));
   stats.dn = fixArr(stats.dn, true);    // nº de aciertos con medición, por dígito
@@ -837,10 +930,11 @@
       help2: `Con − y + pon en el visor el mismo número que el primero de la izquierda (el marcado en blanco).`,
       help3: `Toca el visor amarillo para comértelo.`,
       help4: `Si un número toca el borde izquierdo pierdes una vida (máximo 6).`,
-      help5: `Toca las sorpresas: ❤️ vida, 🐌 más lento, ⚡ más rápido, 💥 se comen números.`,
+      help5: `Toca las sorpresas: ❤️ vida, 🐌 más lento, ⚡ más rápido, 💥 se comen números, ×2 puntos dobles, 🍴 doble bocado (cada número que comes se lleva también el siguiente).`,
       help6: `En ordenador: ← → para − y +, ↓ para comer, ↑ para coger una sorpresa.`,
       help7: `Rachas: cada 5 números seguidos sin fallar sube el multiplicador (hasta ×5). Un fallo, o perder una vida, lo reinicia.`,
       help8: `Número dorado ⭐ = puntos ×3. Número «?» = comodín: se come con cualquier número.`,
+      help11: `Número de hielo ❄️: al comerlo, el tiempo va más lento unos segundos.`,
       help9: `Reto diario: la misma secuencia de números para todos cada día. Puedes retar a un amigo con un enlace.`,
       help10: `En Estadísticas ves tu tiempo de reacción y tu evolución semanal. Con la copia de seguridad puedes llevarte tu progreso a otro dispositivo.`,
       ok: `Entendido`, close: `Cerrar`,
@@ -852,6 +946,7 @@
       score: `Puntuación`, level: `Nivel`, time: `Tiempo`, streak_best: `Mejor racha`,
       again: `🔄 Jugar de nuevo`, share_score: `📤 Compartir mi puntuación`,
       life_extra: `¡Vida extra! ❤️`, slower: `🐌 Más lento`, faster: `⚡ Más rápido`,
+      iced: `❄️ Hielo`, ef_dbl: `✨ Puntos ×2`, ef_twin: `🍴 Doble bocado`,
       eaten: `¡Números comidos! 💥`, level_up: `¡Nivel {n}! 🎉`,
       share_text_score: `¡He conseguido {s} puntos en Comenum! ¿Puedes superarme? 🔢`,
       share_text: `Prueba Comenum, un juego rápido para comer números. ¿Cuántos aguantas? 🔢`,
@@ -904,6 +999,7 @@
       hand_label: `Mano de juego`, hand_r: `Diestro`, hand_l: `Zurdo (+ a la izquierda)`,
       size_label: `Tamaño de los números`, size_n: `Normal`, size_l: `Grande`, size_xl: `Muy grande`,
       cb_label: `Colores`, cb_off: `Clásicos`, cb_on: `Apto daltonismo`,
+      fx_label: `Efectos visuales`, fx_on: `Sí`, fx_off: `No`,
       season_locked: `Disponible en {m}`, season_now: `Tema de temporada disponible: {n}`,
       season_when: { xmas: `diciembre`, summer: `julio y agosto`, autumn: `octubre`, spring: `abril` },
       backup_btn: `💾 Copia de seguridad`, backup_title: `Copia de seguridad`,
@@ -939,10 +1035,11 @@
       help2: `Use − and + to set the display to the same number as the first one on the left (the one outlined in white).`,
       help3: `Tap the yellow display to eat it.`,
       help4: `If a number touches the left edge you lose a life (maximum 6).`,
-      help5: `Tap the surprises: ❤️ life, 🐌 slower, ⚡ faster, 💥 numbers eaten.`,
+      help5: `Tap the surprises: ❤️ life, 🐌 slower, ⚡ faster, 💥 numbers eaten, ×2 double points, 🍴 double bite (each number you eat takes the next one too).`,
       help6: `On a computer: ← → for − and +, ↓ to eat, ↑ to grab a surprise.`,
       help7: `Streaks: every 5 numbers in a row without a mistake raises the multiplier (up to ×5). A mistake, or losing a life, resets it.`,
       help8: `Golden number ⭐ = triple points. Number “?” = wildcard: it can be eaten with any number.`,
+      help11: `Ice number ❄️: eat it and everything slows down for a few seconds.`,
       help9: `Daily challenge: the same number sequence for everyone each day. You can challenge a friend with a link.`,
       help10: `In Statistics you can see your reaction time and your weekly progress. With the backup you can take your progress to another device.`,
       ok: `Got it`, close: `Close`,
@@ -954,6 +1051,7 @@
       score: `Score`, level: `Level`, time: `Time`, streak_best: `Best streak`,
       again: `🔄 Play again`, share_score: `📤 Share my score`,
       life_extra: `Extra life! ❤️`, slower: `🐌 Slower`, faster: `⚡ Faster`,
+      iced: `❄️ Ice`, ef_dbl: `✨ Points ×2`, ef_twin: `🍴 Double bite`,
       eaten: `Numbers eaten! 💥`, level_up: `Level {n}! 🎉`,
       share_text_score: `I scored {s} points in Comenum! Can you beat me? 🔢`,
       share_text: `Try Comenum, a fast game about eating numbers. How long can you last? 🔢`,
@@ -1006,6 +1104,7 @@
       hand_label: `Playing hand`, hand_r: `Right-handed`, hand_l: `Left-handed (+ on the left)`,
       size_label: `Number size`, size_n: `Normal`, size_l: `Large`, size_xl: `Extra large`,
       cb_label: `Colors`, cb_off: `Classic`, cb_on: `Colorblind-friendly`,
+      fx_label: `Visual effects`, fx_on: `On`, fx_off: `Off`,
       season_locked: `Available in {m}`, season_now: `Seasonal theme available: {n}`,
       season_when: { xmas: `December`, summer: `July and August`, autumn: `October`, spring: `April` },
       backup_btn: `💾 Backup`, backup_title: `Backup`,
@@ -1040,10 +1139,11 @@
       help2: `Avec − et +, affiche dans le compteur le même nombre que le premier à gauche (celui entouré de blanc).`,
       help3: `Touche le compteur jaune pour le manger.`,
       help4: `Si un nombre touche le bord gauche, tu perds une vie (maximum 6).`,
-      help5: `Touche les surprises : ❤️ vie, 🐌 plus lent, ⚡ plus rapide, 💥 nombres mangés.`,
+      help5: `Touche les surprises : ❤️ vie, 🐌 plus lent, ⚡ plus rapide, 💥 nombres mangés, ×2 points doubles, 🍴 double bouchée (chaque nombre mangé emporte aussi le suivant).`,
       help6: `Sur ordinateur : ← → pour − et +, ↓ pour manger, ↑ pour attraper une surprise.`,
       help7: `Séries : tous les 5 nombres de suite sans erreur, le multiplicateur augmente (jusqu'à ×5). Une erreur, ou perdre une vie, le remet à zéro.`,
       help8: `Nombre doré ⭐ = points ×3. Nombre « ? » = joker : on peut le manger avec n'importe quel nombre.`,
+      help11: `Nombre de glace ❄️ : quand tu le manges, tout ralentit pendant quelques secondes.`,
       help9: `Défi du jour : la même suite de nombres pour tout le monde chaque jour. Tu peux défier un ami avec un lien.`,
       help10: `Dans Statistiques, tu vois ton temps de réaction et ta progression par semaine. Avec la sauvegarde, tu peux emporter ta progression sur un autre appareil.`,
       ok: `Compris`, close: `Fermer`,
@@ -1055,6 +1155,7 @@
       score: `Score`, level: `Niveau`, time: `Temps`, streak_best: `Meilleure série`,
       again: `🔄 Rejouer`, share_score: `📤 Partager mon score`,
       life_extra: `Vie en plus ! ❤️`, slower: `🐌 Plus lent`, faster: `⚡ Plus rapide`,
+      iced: `❄️ Glace`, ef_dbl: `✨ Points ×2`, ef_twin: `🍴 Double bouchée`,
       eaten: `Nombres mangés ! 💥`, level_up: `Niveau {n} ! 🎉`,
       share_text_score: `J'ai marqué {s} points à Comenum ! Peux-tu me battre ? 🔢`,
       share_text: `Essaie Comenum, un jeu rapide pour manger des nombres. Combien de temps tiens-tu ? 🔢`,
@@ -1107,6 +1208,7 @@
       hand_label: `Main de jeu`, hand_r: `Droitier`, hand_l: `Gaucher (+ à gauche)`,
       size_label: `Taille des nombres`, size_n: `Normale`, size_l: `Grande`, size_xl: `Très grande`,
       cb_label: `Couleurs`, cb_off: `Classiques`, cb_on: `Adaptées au daltonisme`,
+      fx_label: `Effets visuels`, fx_on: `Oui`, fx_off: `Non`,
       season_locked: `Disponible en {m}`, season_now: `Thème de saison disponible : {n}`,
       season_when: { xmas: `décembre`, summer: `juillet et août`, autumn: `octobre`, spring: `avril` },
       backup_btn: `💾 Sauvegarde`, backup_title: `Sauvegarde`,
@@ -1141,10 +1243,11 @@
       help2: `Stelle mit − und + im Display dieselbe Zahl ein wie die erste links (die weiß umrandete).`,
       help3: `Tippe auf das gelbe Display, um sie zu essen.`,
       help4: `Berührt eine Zahl den linken Rand, verlierst du ein Leben (maximal 6).`,
-      help5: `Tippe auf die Überraschungen: ❤️ Leben, 🐌 langsamer, ⚡ schneller, 💥 Zahlen gegessen.`,
+      help5: `Tippe auf die Überraschungen: ❤️ Leben, 🐌 langsamer, ⚡ schneller, 💥 Zahlen gegessen, ×2 doppelte Punkte, 🍴 Doppelbiss (jede gegessene Zahl nimmt die nächste mit).`,
       help6: `Am Computer: ← → für − und +, ↓ zum Essen, ↑ für eine Überraschung.`,
       help7: `Serien: Alle 5 Zahlen in Folge ohne Fehler steigt der Multiplikator (bis ×5). Ein Fehler oder ein verlorenes Leben setzt ihn zurück.`,
       help8: `Goldene Zahl ⭐ = dreifache Punkte. Zahl „?“ = Joker: Sie kann mit jeder Zahl gegessen werden.`,
+      help11: `Eiszahl ❄️: Wenn du sie isst, läuft alles ein paar Sekunden langsamer.`,
       help9: `Tagesaufgabe: Jeden Tag dieselbe Zahlenfolge für alle. Mit einem Link kannst du einen Freund herausfordern.`,
       help10: `Unter Statistiken siehst du deine Reaktionszeit und deine Entwicklung pro Woche. Mit der Sicherung nimmst du deinen Fortschritt auf ein anderes Gerät mit.`,
       ok: `Verstanden`, close: `Schließen`,
@@ -1156,6 +1259,7 @@
       score: `Punkte`, level: `Level`, time: `Zeit`, streak_best: `Beste Serie`,
       again: `🔄 Nochmal spielen`, share_score: `📤 Meine Punktzahl teilen`,
       life_extra: `Extraleben! ❤️`, slower: `🐌 Langsamer`, faster: `⚡ Schneller`,
+      iced: `❄️ Eis`, ef_dbl: `✨ Punkte ×2`, ef_twin: `🍴 Doppelbiss`,
       eaten: `Zahlen gegessen! 💥`, level_up: `Level {n}! 🎉`,
       share_text_score: `Ich habe {s} Punkte in Comenum erreicht! Kannst du mich schlagen? 🔢`,
       share_text: `Probier Comenum aus, ein schnelles Spiel zum Zahlenessen. Wie lange hältst du durch? 🔢`,
@@ -1208,6 +1312,7 @@
       hand_label: `Spielhand`, hand_r: `Rechtshänder`, hand_l: `Linkshänder (+ links)`,
       size_label: `Zahlengröße`, size_n: `Normal`, size_l: `Groß`, size_xl: `Sehr groß`,
       cb_label: `Farben`, cb_off: `Klassisch`, cb_on: `Farbenblind-freundlich`,
+      fx_label: `Visuelle Effekte`, fx_on: `An`, fx_off: `Aus`,
       season_locked: `Verfügbar im {m}`, season_now: `Saisonales Thema verfügbar: {n}`,
       season_when: { xmas: `Dezember`, summer: `Juli und August`, autumn: `Oktober`, spring: `April` },
       backup_btn: `💾 Sicherung`, backup_title: `Sicherung`,
@@ -1242,10 +1347,11 @@
       help2: `Con − e + metti nel display lo stesso numero del primo a sinistra (quello cerchiato di bianco).`,
       help3: `Tocca il display giallo per mangiarlo.`,
       help4: `Se un numero tocca il bordo sinistro perdi una vita (massimo 6).`,
-      help5: `Tocca le sorprese: ❤️ vita, 🐌 più lento, ⚡ più veloce, 💥 numeri mangiati.`,
+      help5: `Tocca le sorprese: ❤️ vita, 🐌 più lento, ⚡ più veloce, 💥 numeri mangiati, ×2 punti doppi, 🍴 doppio boccone (ogni numero che mangi porta via anche il successivo).`,
       help6: `Da computer: ← → per − e +, ↓ per mangiare, ↑ per prendere una sorpresa.`,
       help7: `Serie: ogni 5 numeri di fila senza errori sale il moltiplicatore (fino a ×5). Un errore, o perdere una vita, lo azzera.`,
       help8: `Numero dorato ⭐ = punti ×3. Numero «?» = jolly: si può mangiare con qualsiasi numero.`,
+      help11: `Numero di ghiaccio ❄️: quando lo mangi, tutto rallenta per qualche secondo.`,
       help9: `Sfida del giorno: la stessa sequenza di numeri per tutti, ogni giorno. Puoi sfidare un amico con un link.`,
       help10: `In Statistiche vedi il tuo tempo di reazione e l'andamento settimanale. Con la copia di sicurezza porti i tuoi progressi su un altro dispositivo.`,
       ok: `Ho capito`, close: `Chiudi`,
@@ -1257,6 +1363,7 @@
       score: `Punteggio`, level: `Livello`, time: `Tempo`, streak_best: `Serie migliore`,
       again: `🔄 Gioca ancora`, share_score: `📤 Condividi il mio punteggio`,
       life_extra: `Vita extra! ❤️`, slower: `🐌 Più lento`, faster: `⚡ Più veloce`,
+      iced: `❄️ Ghiaccio`, ef_dbl: `✨ Punti ×2`, ef_twin: `🍴 Doppio boccone`,
       eaten: `Numeri mangiati! 💥`, level_up: `Livello {n}! 🎉`,
       share_text_score: `Ho fatto {s} punti a Comenum! Riesci a battermi? 🔢`,
       share_text: `Prova Comenum, un gioco veloce per mangiare numeri. Quanto resisti? 🔢`,
@@ -1309,6 +1416,7 @@
       hand_label: `Mano di gioco`, hand_r: `Destrimane`, hand_l: `Mancino (+ a sinistra)`,
       size_label: `Dimensione dei numeri`, size_n: `Normale`, size_l: `Grande`, size_xl: `Molto grande`,
       cb_label: `Colori`, cb_off: `Classici`, cb_on: `Adatti al daltonismo`,
+      fx_label: `Effetti visivi`, fx_on: `Sì`, fx_off: `No`,
       season_locked: `Disponibile: {m}`, season_now: `Tema di stagione disponibile: {n}`,
       season_when: { xmas: `dicembre`, summer: `luglio e agosto`, autumn: `ottobre`, spring: `aprile` },
       backup_btn: `💾 Copia di sicurezza`, backup_title: `Copia di sicurezza`,
@@ -1343,10 +1451,11 @@
       help2: `Com − e + coloque no visor o mesmo número do primeiro da esquerda (o contornado de branco).`,
       help3: `Toque no visor amarelo para comê-lo.`,
       help4: `Se um número tocar a borda esquerda, você perde uma vida (máximo 6).`,
-      help5: `Toque nas surpresas: ❤️ vida, 🐌 mais lento, ⚡ mais rápido, 💥 números comidos.`,
+      help5: `Toque nas surpresas: ❤️ vida, 🐌 mais lento, ⚡ mais rápido, 💥 números comidos, ×2 pontos em dobro, 🍴 mordida dupla (cada número que você come leva o próximo também).`,
       help6: `No computador: ← → para − e +, ↓ para comer, ↑ para pegar uma surpresa.`,
       help7: `Sequências: a cada 5 números seguidos sem errar, o multiplicador sobe (até ×5). Um erro, ou perder uma vida, zera tudo.`,
       help8: `Número dourado ⭐ = pontos ×3. Número «?» = curinga: pode ser comido com qualquer número.`,
+      help11: `Número de gelo ❄️: ao comê-lo, tudo fica mais lento por alguns segundos.`,
       help9: `Desafio diário: a mesma sequência de números para todos, a cada dia. Você pode desafiar um amigo com um link.`,
       help10: `Em Estatísticas você vê seu tempo de reação e sua evolução semanal. Com a cópia de segurança você leva seu progresso para outro dispositivo.`,
       ok: `Entendi`, close: `Fechar`,
@@ -1358,6 +1467,7 @@
       score: `Pontuação`, level: `Nível`, time: `Tempo`, streak_best: `Melhor sequência`,
       again: `🔄 Jogar de novo`, share_score: `📤 Compartilhar minha pontuação`,
       life_extra: `Vida extra! ❤️`, slower: `🐌 Mais lento`, faster: `⚡ Mais rápido`,
+      iced: `❄️ Gelo`, ef_dbl: `✨ Pontos ×2`, ef_twin: `🍴 Mordida dupla`,
       eaten: `Números comidos! 💥`, level_up: `Nível {n}! 🎉`,
       share_text_score: `Fiz {s} pontos no Comenum! Consegue me superar? 🔢`,
       share_text: `Experimente o Comenum, um jogo rápido de comer números. Quanto tempo você aguenta? 🔢`,
@@ -1410,6 +1520,7 @@
       hand_label: `Mão de jogo`, hand_r: `Destro`, hand_l: `Canhoto (+ à esquerda)`,
       size_label: `Tamanho dos números`, size_n: `Normal`, size_l: `Grande`, size_xl: `Muito grande`,
       cb_label: `Cores`, cb_off: `Clássicas`, cb_on: `Para daltonismo`,
+      fx_label: `Efeitos visuais`, fx_on: `Sim`, fx_off: `Não`,
       season_locked: `Disponível em {m}`, season_now: `Tema de temporada disponível: {n}`,
       season_when: { xmas: `dezembro`, summer: `julho e agosto`, autumn: `outubro`, spring: `abril` },
       backup_btn: `💾 Cópia de segurança`, backup_title: `Cópia de segurança`,
@@ -1475,15 +1586,19 @@
   // ---------- Estado ----------
   let S = newState(1, 'normal', 'x');
   function newState(lv, mode, seed) {
+    const sd = seed || 'x';
     return {
       playing: false, paused: false, helpPaused: false,
-      mode: mode || 'normal', seed: seed || 'x', rng: mulberry32(hashStr(seed || 'x')),
+      mode: mode || 'normal', seed: sd,
+      rng: mulberry32(hashStr(sd)),
+      rng2: mulberry32(hashStr(sd + '|ice')),   // aparte, para no alterar las secuencias de números
       startLv: lv, target: 0, passed: false,
       score: 0, level: lv, lives: 3, player: 1, time: 0,
       eaten: 0, goal: goalFor(lv),
       streak: 0, bestStreak: 0,
-      numbers: [], dist: SPACING, breath: 0,
+      numbers: [], dist: SPACING, breath: 0, freeze: 0,
       speedMult: 1, effectLeft: 0, effectKey: '',
+      dblLeft: 0, twinLeft: 0,
       surprises: [], nextSurprise: 8,
       curFirst: null, firstSince: 0,
       rn: 0, rsum: 0, rbest: 0, ok: 0, bad: 0
@@ -1518,6 +1633,7 @@
   const SFX = {
     eat:    () => { tone(660, .09, 'square', .09); tone(990, .12, 'square', .09, .07); },
     gold:   () => { tone(1047, .1, 'triangle', .13); tone(1319, .1, 'triangle', .13, .08); tone(1568, .18, 'triangle', .13, .16); },
+    ice:    () => { tone(1760, .09, 'sine', .1, .05); tone(2349, .16, 'sine', .09, .12); },
     combo:  () => { tone(784, .08, 'triangle', .12, .12); tone(1175, .16, 'triangle', .12, .2); },
     ach:    () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, .16, 'triangle', .13, .15 + i * .09)),
     button: () => tone(520, .05, 'triangle', .12),
@@ -1632,6 +1748,91 @@
   function close(id) { $(id).classList.remove('open'); }
   function updateSoundIcon() { $('btnSound').textContent = muted ? '🔇' : '🔊'; }
 
+  // ---------- Efectos visuales (partículas muy discretas, colores neutros) ----------
+  const FXC = {
+    normal: ['rgba(255,255,255,.92)', 'rgba(255,255,255,.6)'],
+    wild:   ['rgba(255,255,255,.92)', 'rgba(255,255,255,.6)'],
+    gold:   ['#ffe14d', '#fff6b0', '#ffffff'],
+    ice:    ['#e1f5fe', '#81d4fa', '#ffffff']
+  };
+  function fxPoint(el) {   // centro de un elemento, en coordenadas de #app
+    const a = $('app').getBoundingClientRect(), r = el.getBoundingClientRect();
+    return [r.left - a.left + r.width / 2, r.top - a.top + r.height / 2];
+  }
+  function fxBurst(x, y, count, colors, o) {
+    if (!fxOn) return;
+    const box = $('fx');
+    for (let i = 0; i < count; i++) {
+      if (box.childElementCount >= FX_MAX) break;
+      const p = document.createElement('i');
+      p.className = 'pt';
+      const ang = o.up ? (-Math.PI / 2 + (Math.random() - 0.5) * 1.9) : Math.random() * Math.PI * 2;
+      const d = (o.dist || 50) * (0.6 + Math.random() * 0.6);
+      const sz = (o.size || 6) * (0.7 + Math.random() * 0.6);
+      p.style.left = x + 'px';
+      p.style.top = y + 'px';
+      p.style.width = p.style.height = sz + 'px';
+      p.style.background = colors[i % colors.length];
+      p.style.setProperty('--dx', Math.round(Math.cos(ang) * d) + 'px');
+      p.style.setProperty('--dy', Math.round(Math.sin(ang) * d) + 'px');
+      p.style.animationDuration = (o.dur || 600) + 'ms';
+      box.appendChild(p);
+      setTimeout(() => p.remove(), (o.dur || 600) + 120);
+    }
+  }
+  function eatFx(n, extra) {
+    if (!fxOn) return;
+    const p = fxPoint($('display'));
+    const gold = n.kind === 'gold';
+    fxBurst(p[0], p[1] - 34, gold ? 10 : (n.kind === 'ice' ? 8 : 6), FXC[n.kind] || FXC.normal,
+            { up: true, dist: 62, size: gold ? 8 : 6, dur: 620 });
+    if (extra) fxBurst(p[0], p[1] - 34, 5, FXC[extra.kind] || FXC.normal, { up: true, dist: 84, size: 6, dur: 720 });
+  }
+  function levelFx() {
+    if (!fxOn) return;
+    const a = $('area').getBoundingClientRect(), ap = $('app').getBoundingClientRect();
+    const x = a.left - ap.left + a.width / 2, y = a.top - ap.top + a.height * 0.35;
+    const ring = mk('div', 'ring');
+    ring.style.left = x + 'px';
+    ring.style.top = y + 'px';
+    $('fx').appendChild(ring);
+    setTimeout(() => ring.remove(), 1000);
+    fxBurst(x, y, 14, ['#ffd23f', '#ffffff'], { dist: 110, size: 8, dur: 900 });
+  }
+
+  // ---------- Personaje (al perder una vida) ----------
+  let lastFunny = -1, charaTimer = null;
+  function showChara() {
+    const f = T.funny;
+    let i = 0, guard = 0;
+    do { i = Math.floor(Math.random() * f.length); } while (f.length > 1 && i === lastFunny && guard++ < 10);
+    lastFunny = i;
+    $('charaTxt').textContent = f[i];
+    const ch = $('chara');
+    ch.classList.remove('hidden', 'show');
+    void ch.offsetWidth;
+    ch.classList.add('show');
+    clearTimeout(charaTimer);
+    charaTimer = setTimeout(() => ch.classList.add('hidden'), 2300);
+  }
+  function hideChara() {
+    clearTimeout(charaTimer);
+    $('chara').classList.add('hidden');
+    $('chara').classList.remove('show');
+  }
+
+  // ---------- Efectos temporales (rótulo de arriba) ----------
+  let lastEff = '';
+  function updateEffects() {
+    const parts = [];
+    if (S.effectLeft > 0) parts.push(t(S.effectKey) + ' ' + Math.ceil(S.effectLeft) + 's');
+    if (S.dblLeft > 0) parts.push(t('ef_dbl') + ' ' + Math.ceil(S.dblLeft) + 's');
+    if (S.twinLeft > 0) parts.push(t('ef_twin') + ' ' + Math.ceil(S.twinLeft) + 's');
+    const s = parts.join('  ·  ');
+    if (s !== lastEff) { lastEff = s; $('effect').textContent = s; }
+  }
+  function clearEffects() { lastEff = ''; $('effect').textContent = ''; }
+
   // ---------- Posición de los botones ----------
   // Baja: margen fijo (como antes). Media: 14 % de la altura. Alta: 22 % de la altura.
   // Si el móvil es muy bajo, se reduce el margen para que la zona de sorpresas no quede demasiado pequeña.
@@ -1675,7 +1876,7 @@
     });
   }
 
-  // ---------- Ajustes (mano, tamaño, colores) ----------
+  // ---------- Ajustes (mano, tamaño, colores, efectos) ----------
   function fillChips(box, items, cur, onPick) {
     box.innerHTML = '';
     items.forEach(it => {
@@ -1700,6 +1901,12 @@
       cbMode = v === '1'; lsSet('comenum_cb', v);
       applyAccess(); renderSettings(); sfx('button');
       track('set/cb-' + v, 'Daltonismo ' + v);
+    });
+    fillChips($('fxChips'), [['1', t('fx_on')], ['0', t('fx_off')]], fxOn ? '1' : '0', v => {
+      fxOn = v === '1'; lsSet('comenum_fx', v);
+      if (!fxOn) $('fx').innerHTML = '';
+      renderSettings(); sfx('button');
+      track('set/fx-' + v, 'Efectos ' + v);
     });
   }
 
@@ -2183,8 +2390,10 @@
     let kind = 'normal';
     if (r < P_WILD) kind = 'wild';
     else if (r < P_WILD + P_GOLD) kind = 'gold';
-    el.className = 'num' + (kind !== 'normal' ? ' ' + kind : '');
     const v = kind === 'wild' ? -1 : Math.floor(rnd() * 10);
+    // Hielo: sustituye a algunos números normales (con su propio generador, el dígito no cambia)
+    if (kind === 'normal' && S.rng2() < P_ICE) kind = 'ice';
+    el.className = 'num' + (kind !== 'normal' ? ' ' + kind : '');
     el.textContent = kind === 'wild' ? '?' : v;
     $('strip').appendChild(el);
     const x = $('strip').clientWidth - NUM - 6 - overshoot;
@@ -2225,13 +2434,14 @@
   function startTutorial() {
     ensureAudio();
     stopMusic();
+    hideChara();
     clearNumbers();
     S.surprises.forEach(s => s.el.remove());
     S = newState(1, 'tutorial', 'tutorial');
     S.playing = true;
     S.tut = 1;   // 1: poner el número · 2: comerlo · 3: poner el segundo · 4: comerlo · 5: fin
     $('time').textContent = '00:00';
-    $('effect').textContent = '';
+    clearEffects();
     setBackground(1);
     updateScoreLabel();
     hud();
@@ -2262,6 +2472,7 @@
       sfx('eat');
       d.classList.add('ok');
       popPoints('+10');
+      eatFx(n, null);
       if (S.tut === 2) {
         S.tut = 3;
         tutNumber(TUT.n2);
@@ -2307,13 +2518,21 @@
       if (S.streak > S.bestStreak) S.bestStreak = S.streak;
     }
     const gold = n.kind === 'gold';
-    const pts = 10 * S.level * mult() * (gold ? 3 : 1);
+    const pts = 10 * S.level * mult() * (gold ? 3 : 1) * (S.dblLeft > 0 ? 2 : 1);
     S.score += pts;
     S.eaten++;
     stats.eaten++;
     if (gold) stats.gold++;
     if (n.kind === 'wild') stats.wild++;
     return pts;
+  }
+  function applyKind(n) {   // efecto de los números especiales al comerlos
+    if (n.kind === 'ice') {
+      S.speedMult = ICE_FACTOR;
+      S.effectLeft = ICE_SECS;
+      S.effectKey = 'iced';
+      sfx('ice');
+    }
   }
   function breakStreak() {
     if (S.streak > 0) { S.streak = 0; updateCombo(false); }
@@ -2327,6 +2546,7 @@
       setBackground(S.level);
       toast(t('level_up', { n: S.level }), 'good');
       sfx('level');
+      levelFx();
     }
   }
   function checkChallenge() {
@@ -2363,13 +2583,25 @@
       const ms = (S.curFirst === n) ? Math.round((S.time - S.firstSince) * 1000) : -1;
       removeNumber(0);
       const before = mult();
-      const pts = awardNumber(n, true);
+      let pts = awardNumber(n, true);
       const after = mult();
       recordHit(ms, n.kind === 'wild' ? -1 : n.v);
-      sfx(n.kind === 'gold' ? 'gold' : 'eat');
+      applyKind(n);
+      let gold = n.kind === 'gold';
+      let extra = null;
+      // Doble bocado: el número siguiente desaparece también (da puntos, pero no suma racha)
+      if (S.twinLeft > 0 && S.numbers.length) {
+        extra = S.numbers[0];
+        removeNumber(0);
+        pts += awardNumber(extra, false);
+        applyKind(extra);
+        if (extra.kind === 'gold') gold = true;
+      }
+      sfx(gold ? 'gold' : 'eat');
       if (after > before) sfx('combo');
       d.classList.add('ok');
-      popPoints('+' + pts, n.kind === 'gold' ? 'gold' : '');
+      popPoints('+' + pts, gold ? 'gold' : '');
+      eatFx(n, extra);
       updateCombo(after > before);
       checkLevel();
       checkChallenge();
@@ -2394,32 +2626,33 @@
     S.lives--;
     breakStreak();
     clearNumbers();           // respiro para el jugador
-    S.breath = 2;             // 2 s sin números nuevos
+    S.freeze = FREEZE_SECS;   // el juego se detiene mientras habla el personaje
+    S.breath = 1;             // y luego un segundo más sin números nuevos
     S.dist = SPACING;
-    S.speedMult = 1; S.effectLeft = 0; $('effect').textContent = '';
+    S.speedMult = 1; S.effectLeft = 0; S.dblLeft = 0; S.twinLeft = 0;
+    updateEffects();
     sfx('lose'); vibrate([120, 60, 120]);
-    const f = T.funny;
-    toast(f[Math.floor(Math.random() * f.length)]);
+    showChara();
     hud();
     if (S.lives <= 0) {
       S.playing = false;
       stopMusic();
-      setTimeout(showGameOver, 1900);
+      setTimeout(showGameOver, 2400);
     }
   }
 
   // ---------- Sorpresas ----------
+  const SUP_ICONS = { life: '❤️', slow: '🐌', fast: '⚡', clear: '💥', dbl: '×2', twin: '🍴' };
   function spawnSurprise() {
-    const types = ['slow', 'fast', 'clear'];
+    const types = ['slow', 'fast', 'clear', 'dbl', 'twin'];
     if (S.lives < MAX_LIVES) types.push('life', 'life');
     const type = types[Math.floor(Math.random() * types.length)];
-    const icons = { life: '❤️', slow: '🐌', fast: '⚡', clear: '💥' };
     const area = $('area');
     const w = area.clientWidth, h = area.clientHeight;
     if (h < 90) return;
     const el = document.createElement('div');
-    el.className = 'sup';
-    el.textContent = icons[type];
+    el.className = 'sup' + (type === 'dbl' ? ' txt' : '');
+    el.textContent = SUP_ICONS[type];
     el.style.left = (8 + Math.random() * (w - 72)) + 'px';
     el.style.top = (28 + Math.random() * Math.max(1, h - 100)) + 'px';
     const sup = { el, type, ttl: 4 };
@@ -2446,6 +2679,12 @@
       case 'fast':
         S.speedMult = 1.6; S.effectLeft = 5; S.effectKey = 'faster';
         break;
+      case 'dbl':
+        S.dblLeft = DBL_SECS;
+        break;
+      case 'twin':
+        S.twinLeft = TWIN_SECS;
+        break;
       case 'clear': {
         let total = 0;
         for (let k = 0; k < 4 && S.numbers.length; k++) {
@@ -2461,6 +2700,7 @@
         break;
       }
     }
+    updateEffects();
     hud();
   }
   function grabSurprise() {
@@ -2476,6 +2716,9 @@
     if (!S.playing || S.paused) return;
     if (S.mode === 'tutorial') { paintNumbers(); return; }
 
+    // Pausa tras perder una vida (habla el personaje): el tiempo y los efectos se detienen
+    if (S.freeze > 0) { S.freeze -= dt; return; }
+
     S.time += dt;
     const sec = Math.floor(S.time);
     if (sec !== lastSec) { lastSec = sec; $('time').textContent = fmt(S.time); }
@@ -2483,9 +2726,11 @@
     // Efectos temporales
     if (S.effectLeft > 0) {
       S.effectLeft -= dt;
-      if (S.effectLeft <= 0) { S.speedMult = 1; $('effect').textContent = ''; }
-      else $('effect').textContent = t(S.effectKey) + ' ' + Math.ceil(S.effectLeft) + 's';
+      if (S.effectLeft <= 0) S.speedMult = 1;
     }
+    if (S.dblLeft > 0) S.dblLeft = Math.max(0, S.dblLeft - dt);
+    if (S.twinLeft > 0) S.twinLeft = Math.max(0, S.twinLeft - dt);
+    updateEffects();
 
     // Movimiento (la velocidad depende del nivel según la curva de dificultad)
     const speed = BASE_SPEED * speedFactor(S.level) * S.speedMult;
@@ -2530,6 +2775,7 @@
     ensureAudio();
     $('tutHint').classList.add('hidden');
     tutHighlight([]);
+    hideChara();
     clearNumbers();
     S.surprises.forEach(s => s.el.remove());
     let lv = 1, seed, target = 0;
@@ -2549,7 +2795,7 @@
     S.playing = true;
     lastSec = -1;
     $('time').textContent = '00:00';
-    $('effect').textContent = '';
+    clearEffects();
     setBackground(S.level);
     updateScoreLabel();
     hud();
@@ -2577,6 +2823,7 @@
 
   function showGameOver() {
     sfx('over');
+    hideChara();
     const prevBest = best;
     const isRecord = S.score > best;
     if (isRecord) { best = S.score; lsSet('comenum_best', String(best)); }
