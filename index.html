@@ -706,11 +706,11 @@
   const TUT = { n1: 3, n2: 7 };              // números del tutorial
 
   // Curva de dificultad: multiplicador de velocidad según el nivel
-  //   niveles 1-5: +0,25 por nivel · niveles 6-15: +0,05 por nivel · a partir del 15: +0,02 por nivel
+  //   niveles 1-4: +0,20 por nivel · niveles 5-15: +0,05 por nivel · a partir del 15: +0,015 por nivel
   function speedFactor(L) {
-    if (L <= 5) return 1 + 0.25 * (L - 1);
-    if (L <= 15) return 2 + 0.05 * (L - 5);
-    return 2.5 + 0.02 * (L - 15);
+    if (L <= 4) return 1 + 0.2 * (L - 1);
+    if (L <= 15) return 1.6 + 0.05 * (L - 4);
+    return 2.15 + 0.015 * (L - 15);
   }
   // Números necesarios para pasar de nivel (con tope)
   function goalFor(L) { return Math.min(MAX_GOAL, 10 + (L - 1) * 5); }
@@ -1627,7 +1627,7 @@
   }
 
   // ---------- Audio ----------
-  let audioCtx = null, master = null, musicTimer = null, step = 0;
+  let audioCtx = null, master = null;
   function ensureAudio() {
     if (!audioCtx) {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -1666,19 +1666,116 @@
   };
   const sfx = n => { try { SFX[n](); } catch (e) {} };
 
-  const PENT = [261.63, 293.66, 329.63, 392, 440, 523.25, 587.33, 659.25];
-  const MELODY = [0,2,4,2,5,4,2,-1, 0,2,4,7,5,4,2,-1, 3,5,6,5,4,2,0,-1, 0,2,4,5,4,2,0,-1];
-  const BASS = [130.81, 98, 110, 87.31];
-  function musicTick() {
-    musicTimer = setTimeout(musicTick, Math.max(130, 230 - (S.level - 1) * 10));
-    if (!S.playing || S.paused || !audioCtx) return;
-    const m = MELODY[step % MELODY.length];
-    if (m >= 0) tone(PENT[m], .18, 'triangle', .05);
-    if (step % 4 === 0) tone(BASS[((step / 4) | 0) % BASS.length], .5, 'sine', .07);
-    step++;
+  // ---------- Música de fondo ----------
+  // Suave y sin prisa: un colchón de acordes que respira (las notas entran despacio y se mezclan),
+  // una melodía escasa y dulce con silencios, un filtro que quita lo agudo y un eco suave.
+  // El ritmo no cambia con el nivel. Cada pocos niveles cambia la progresión de acordes.
+  const MUSIC_VOL = 0.5;      // volumen general de la música (0 a 1)
+  const BAR = 4.8;            // segundos que dura cada acorde
+  const MUSIC_LP = 1100;      // el filtro corta por encima de estos Hz (más bajo = más suave)
+  const MEL_PROB = 0.68;      // probabilidad de que suene cada nota de la melodía (más bajo = más espacios)
+  const MEL = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];   // do re mi sol la do: escala pentatónica
+  const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+  const CH = {
+    maj7: r => [r, r + 7, r + 16, r + 23],
+    m7:   r => [r, r + 7, r + 15, r + 22],
+    tri:  r => [r, r + 7, r + 16, r + 19]
+  };
+  const PROGS = [
+    [['maj7', 48], ['m7', 45], ['maj7', 41], ['tri', 43]],
+    [['maj7', 41], ['tri', 43], ['m7', 40], ['m7', 45]],
+    [['maj7', 48], ['m7', 40], ['maj7', 41], ['tri', 43]]
+  ];
+  let mus = null, musTimer = null, musNext = 0, musBar = 0, musMel = 3, musOff = true;
+
+  function musicNote(freq, t0, dur, vol, type, attack, release) {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + attack);
+    g.gain.setValueAtTime(vol, t0 + Math.max(attack, dur - release));
+    g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(mus.input);
+    o.start(t0); o.stop(t0 + dur + 0.05);
   }
-  function startMusic() { clearTimeout(musicTimer); step = 0; musicTick(); }
-  function stopMusic() { clearTimeout(musicTimer); }
+  function scheduleBar(t0) {
+    const prog = PROGS[Math.floor((S.level - 1) / 3) % PROGS.length];
+    const c = prog[musBar % prog.length];
+    // Colchón de acordes: entra despacio y se funde con el siguiente
+    CH[c[0]](c[1]).forEach((m, i) => {
+      musicNote(mf(m), t0 + i * 0.12, BAR + 2.0, i === 0 ? 0.035 : 0.022, 'triangle', 1.4, 2.0);
+    });
+    // Melodía escasa: pasos cortos por la escala, con silencios
+    [0.5, 1.9, 3.1].forEach(p => {
+      if (Math.random() < MEL_PROB) {
+        musMel = Math.max(0, Math.min(MEL.length - 1, musMel + Math.floor(Math.random() * 5) - 2));
+        musicNote(MEL[musMel], t0 + p, 2.4, 0.05, 'sine', 0.07, 2.33);
+      }
+    });
+    musBar++;
+  }
+  function musicLoop() {
+    musTimer = setTimeout(musicLoop, 250);
+    if (!mus || !audioCtx) return;
+    const now = audioCtx.currentTime;
+    const active = S.playing && !S.paused && !muted && !document.hidden;
+    if (!active) {
+      if (!musOff) { mus.gain.gain.setTargetAtTime(0.0001, now, 0.25); musOff = true; }
+      return;
+    }
+    if (musOff) {
+      mus.gain.gain.cancelScheduledValues(now);
+      mus.gain.gain.setTargetAtTime(MUSIC_VOL, now, 0.8);   // entrada suave
+      musOff = false;
+      musNext = now + 0.15;
+    }
+    while (musNext < now + 1.0) {   // se programa con un poco de adelanto
+      scheduleBar(musNext);
+      musNext += BAR;
+    }
+  }
+  function startMusic() {
+    stopMusic(true);
+    if (!audioCtx) return;
+    try {
+      const input = audioCtx.createGain();
+      const lp = audioCtx.createBiquadFilter();           // quita lo agudo y lo metálico
+      lp.type = 'lowpass'; lp.frequency.value = MUSIC_LP; lp.Q.value = 0.4;
+      const out = audioCtx.createGain();                  // volumen general
+      out.gain.value = 0.0001;
+      const dly = audioCtx.createDelay(1.0);              // eco suave
+      dly.delayTime.value = 0.46;
+      const fb = audioCtx.createGain(); fb.gain.value = 0.32;
+      const wlp = audioCtx.createBiquadFilter();
+      wlp.type = 'lowpass'; wlp.frequency.value = 800;
+      const wet = audioCtx.createGain(); wet.gain.value = 0.35;
+      input.connect(lp);
+      lp.connect(out);
+      lp.connect(dly);
+      dly.connect(wlp); wlp.connect(fb); fb.connect(dly);
+      wlp.connect(wet); wet.connect(out);
+      out.connect(master);
+      mus = { input: input, gain: out, nodes: [input, lp, out, dly, fb, wlp, wet] };
+      musBar = 0; musMel = 3; musOff = true; musNext = 0;
+      clearTimeout(musTimer);
+      musicLoop();
+    } catch (e) { mus = null; }
+  }
+  function stopMusic(now) {
+    clearTimeout(musTimer);
+    if (!mus) return;
+    const m = mus;
+    mus = null;
+    try {
+      if (now === true) m.gain.disconnect();
+      else {
+        m.gain.gain.cancelScheduledValues(audioCtx.currentTime);
+        m.gain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.2);   // se apaga con un fundido
+      }
+    } catch (e) {}
+    setTimeout(() => { try { m.nodes.forEach(n => n.disconnect()); } catch (e) {} }, 2500);
+  }
 
   const vibrate = p => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
 
