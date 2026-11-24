@@ -355,6 +355,16 @@
   .posrow .chip { min-width: 0; padding: 6px 14px; font-size: 13px; }
   .prev { display: flex; justify-content: center; gap: 8px; margin: 8px 0 4px; }
 
+  /* Selector de tema (ventana de pausa) */
+  .themechips { gap: 10px; }
+  .tsw {
+    width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; cursor: pointer;
+    font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.14);
+  }
+  .tsw.sel { border-color: #5b3ea8; transform: scale(1.14); box-shadow: 0 0 0 2px #fff, 0 3px 10px rgba(0,0,0,.35); }
+  .tsw:active { transform: scale(.92); }
+
   /* Logros y temas */
   .row {
     display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin-top: 7px;
@@ -524,6 +534,10 @@
       <div class="posrow">
         <div class="lab" data-i18n="pos_label"></div>
         <div class="chips poschips"></div>
+      </div>
+      <div class="posrow">
+        <div class="lab"><span data-i18n="theme_label"></span>: <b id="themeName"></b></div>
+        <div class="chips themechips"></div>
       </div>
     </div>
   </div>
@@ -951,6 +965,7 @@
       share_text_score: `¡He conseguido {s} puntos en Comenum! ¿Puedes superarme? 🔢`,
       share_text: `Prueba Comenum, un juego rápido para comer números. ¿Cuántos aguantas? 🔢`,
       ach_btn: `🏆 Logros y temas`, themes_title: `Temas de color`, ach_list_title: `Logros`, theme_active: `En uso`,
+      theme_label: `Tema de color`,
       ach_eat: `Come {n} números`, ach_streak: `Racha de {n} seguidos`, ach_level: `Llega al nivel {n}`,
       ach_score: `Consigue {n} puntos`, ach_gold: `Come {n} números dorados`, ach_wild: `Come {n} comodines`,
       ach_games: `Juega {n} partidas`,
@@ -1056,6 +1071,7 @@
       share_text_score: `I scored {s} points in Comenum! Can you beat me? 🔢`,
       share_text: `Try Comenum, a fast game about eating numbers. How long can you last? 🔢`,
       ach_btn: `🏆 Achievements & themes`, themes_title: `Color themes`, ach_list_title: `Achievements`, theme_active: `In use`,
+      theme_label: `Color theme`,
       ach_eat: `Eat {n} numbers`, ach_streak: `Streak of {n} in a row`, ach_level: `Reach level {n}`,
       ach_score: `Score {n} points`, ach_gold: `Eat {n} golden numbers`, ach_wild: `Eat {n} wildcards`,
       ach_games: `Play {n} games`,
@@ -1160,6 +1176,7 @@
       share_text_score: `J'ai marqué {s} points à Comenum ! Peux-tu me battre ? 🔢`,
       share_text: `Essaie Comenum, un jeu rapide pour manger des nombres. Combien de temps tiens-tu ? 🔢`,
       ach_btn: `🏆 Succès et thèmes`, themes_title: `Thèmes de couleur`, ach_list_title: `Succès`, theme_active: `Utilisé`,
+      theme_label: `Thème de couleur`,
       ach_eat: `Mange {n} nombres`, ach_streak: `Série de {n} d'affilée`, ach_level: `Atteins le niveau {n}`,
       ach_score: `Marque {n} points`, ach_gold: `Mange {n} nombres dorés`, ach_wild: `Mange {n} jokers`,
       ach_games: `Joue {n} parties`,
@@ -1264,6 +1281,7 @@
       share_text_score: `Ich habe {s} Punkte in Comenum erreicht! Kannst du mich schlagen? 🔢`,
       share_text: `Probier Comenum aus, ein schnelles Spiel zum Zahlenessen. Wie lange hältst du durch? 🔢`,
       ach_btn: `🏆 Erfolge & Themen`, themes_title: `Farbthemen`, ach_list_title: `Erfolge`, theme_active: `Aktiv`,
+      theme_label: `Farbthema`,
       ach_eat: `Iss {n} Zahlen`, ach_streak: `{n} in Folge`, ach_level: `Erreiche Level {n}`,
       ach_score: `Erreiche {n} Punkte`, ach_gold: `Iss {n} goldene Zahlen`, ach_wild: `Iss {n} Joker`,
       ach_games: `Spiele {n} Partien`,
@@ -1368,6 +1386,7 @@
       share_text_score: `Ho fatto {s} punti a Comenum! Riesci a battermi? 🔢`,
       share_text: `Prova Comenum, un gioco veloce per mangiare numeri. Quanto resisti? 🔢`,
       ach_btn: `🏆 Traguardi e temi`, themes_title: `Temi di colore`, ach_list_title: `Traguardi`, theme_active: `In uso`,
+      theme_label: `Tema di colore`,
       ach_eat: `Mangia {n} numeri`, ach_streak: `Serie di {n} di fila`, ach_level: `Raggiungi il livello {n}`,
       ach_score: `Fai {n} punti`, ach_gold: `Mangia {n} numeri dorati`, ach_wild: `Mangia {n} jolly`,
       ach_games: `Gioca {n} partite`,
@@ -1472,6 +1491,7 @@
       share_text_score: `Fiz {s} pontos no Comenum! Consegue me superar? 🔢`,
       share_text: `Experimente o Comenum, um jogo rápido de comer números. Quanto tempo você aguenta? 🔢`,
       ach_btn: `🏆 Conquistas e temas`, themes_title: `Temas de cor`, ach_list_title: `Conquistas`, theme_active: `Em uso`,
+      theme_label: `Tema de cor`,
       ach_eat: `Coma {n} números`, ach_streak: `Sequência de {n} seguidos`, ach_level: `Chegue ao nível {n}`,
       ach_score: `Faça {n} pontos`, ach_gold: `Coma {n} números dourados`, ach_wild: `Coma {n} curingas`,
       ach_games: `Jogue {n} partidas`,
@@ -1570,6 +1590,7 @@
     $('bkIn').placeholder = t('backup_paste');
     $('langSel').value = lang;
     renderPosChips();
+    renderThemeChips();
     renderSettings();
     updateScoreLabel();
     refreshStart();
@@ -1876,6 +1897,32 @@
     });
   }
 
+  // ---------- Cambio de tema desde la pausa ----------
+  function renderThemeChips() {
+    document.querySelectorAll('.themechips').forEach(box => {
+      box.innerHTML = '';
+      THEMES.filter(themeUnlocked).forEach(th => {
+        const b = mk('button', 'tsw' + (th.id === themeId ? ' sel' : ''), th.icon || '');
+        b.style.background = `linear-gradient(135deg, ${th.pal[0][0]}, ${th.pal[0][1]})`;
+        b.setAttribute('aria-label', T.themes[th.id]);
+        b.title = T.themes[th.id];
+        b.addEventListener('click', () => pickTheme(th.id, box.closest('.overlay')));
+        box.appendChild(b);
+      });
+    });
+    const nm = $('themeName');
+    if (nm) nm.textContent = T.themes[curTheme().id];
+  }
+  function pickTheme(id, overlay) {
+    themeId = id;
+    lsSet('comenum_theme', id);
+    applyTheme();
+    renderThemeChips();
+    sfx('button');
+    track('theme/' + id, 'Tema ' + id);
+    peekOverlay(overlay);
+  }
+
   // ---------- Ajustes (mano, tamaño, colores, efectos) ----------
   function fillChips(box, items, cur, onPick) {
     box.innerHTML = '';
@@ -2004,6 +2051,7 @@
     lsSet('comenum_theme', id);
     applyTheme();
     renderAch();
+    renderThemeChips();
     sfx('button');
   }
   function renderAch() {
@@ -2903,6 +2951,7 @@
   function pauseGame() {
     if (!S.playing || S.paused) return;
     S.paused = true;
+    renderThemeChips();   // por si se ha desbloqueado un tema o ha cambiado la temporada
     open('ovPause');
   }
   function resumeGame() {
