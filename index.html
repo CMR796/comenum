@@ -65,17 +65,31 @@
   /* Barra superior */
   .topbar {
     position: relative; z-index: 1;
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 12px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 10px;
     background: rgba(0,0,0,.18);
     font-size: 14px; font-weight: 700;
   }
+  .topbar > div { white-space: nowrap; }
   .topbar .spacer { flex: 1; }
   .ib {
+    position: relative; flex: none;
     background: rgba(255,255,255,.2); border: none; color: #fff;
-    width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer;
+    width: 33px; height: 33px; border-radius: 50%; font-size: 16px; cursor: pointer;
   }
   .ib:active { transform: scale(.92); }
+  .ib.off { opacity: .6; }
+  .ib.off::after {   /* raya diagonal: el botón está apagado */
+    content: ""; position: absolute; left: 20%; right: 20%; top: 50%; height: 2.5px; margin-top: -1px;
+    background: #fff; border-radius: 2px; transform: rotate(-45deg);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.35);
+  }
+  @media (max-width: 400px) {
+    .topbar { gap: 6px; padding: 10px 8px; font-size: 13px; }
+    .ib { width: 31px; height: 31px; font-size: 15px; }
+    .lvl-lbl { display: none; }
+    #lvlWrap::before { content: "⭐ "; }
+  }
 
   /* Puntuación */
   #scoreWrap { position: relative; z-index: 1; text-align: center; padding: 8px 0 4px; }
@@ -432,9 +446,10 @@
   <div class="topbar">
     <div>❤️ <b id="lives">3</b></div>
     <div>⏱️ <b id="time">00:00</b></div>
-    <div><span data-i18n="level"></span> <b id="level">1</b></div>
+    <div id="lvlWrap"><span class="lvl-lbl" data-i18n="level"></span> <b id="level">1</b></div>
     <div class="spacer"></div>
-    <button class="ib" id="btnSound" aria-label="Sound">🔊</button>
+    <button class="ib" id="btnMusic" aria-label="Music">🎵</button>
+    <button class="ib" id="btnSfx" aria-label="Sound effects">🔊</button>
     <button class="ib" id="btnPause" aria-label="Pause">⏸️</button>
     <button class="ib" id="btnHelp" aria-label="Help">❓</button>
   </div>
@@ -557,6 +572,8 @@
         <li data-i18n="help11"></li>
         <li data-i18n="help9"></li>
         <li data-i18n="help10"></li>
+        <li data-i18n="help12"></li>
+        <li data-i18n="help13"></li>
         <li data-i18n="help6"></li>
       </ul>
       <button class="btn" id="btnHelpClose" data-i18n="ok"></button>
@@ -846,7 +863,15 @@
 
   let best = parseInt(lsGet('comenum_best')) || 0;
   let maxLevel = Math.max(1, parseInt(lsGet('comenum_maxlevel')) || 1);
-  let muted = lsGet('comenum_mute') === '1';
+  // Sonido: música y efectos se pueden silenciar por separado.
+  // Quien tenía antes todo el sonido apagado lo conserva apagado.
+  let mutedSfx, mutedMusic;
+  (function () {
+    const old = lsGet('comenum_mute') === '1';
+    const a = lsGet('comenum_sfx'), b = lsGet('comenum_music');
+    mutedSfx = a === null ? old : a === '0';
+    mutedMusic = b === null ? old : b === '0';
+  })();
   let startLevel = 1;
   let pos = POS_KEYS.includes(lsGet('comenum_pos')) ? lsGet('comenum_pos') : 'mid';
   let lefty = lsGet('comenum_lefty') === '1';
@@ -951,6 +976,8 @@
       help11: `Número de hielo ❄️: al comerlo, el tiempo va más lento unos segundos.`,
       help9: `Reto diario: la misma secuencia de números para todos cada día. Puedes retar a un amigo con un enlace.`,
       help10: `En Estadísticas ves tu tiempo de reacción y tu evolución semanal. Con la copia de seguridad puedes llevarte tu progreso a otro dispositivo.`,
+      help12: `Arriba tienes dos botones de sonido: 🎵 la música de fondo y 🔊 los efectos. Se activan o silencian por separado (si el icono aparece tachado, está apagado).`,
+      help13: `Personaliza el juego: desde la pausa ⏸️ puedes cambiar la posición de los botones y el tema de color. En ⚙️ Ajustes (menú de inicio) también puedes elegir la mano de juego (modo zurdo), el tamaño de los números, los colores para daltonismo, los efectos visuales y repetir el tutorial.`,
       ok: `Entendido`, close: `Cerrar`,
       ios_title: `Instalar en iPhone`,
       ios1: `1. Abre esta página en <b>Safari</b>.`,
@@ -1032,6 +1059,7 @@
       backup_hint: `💾 Haz una copia de seguridad de tu progreso`,
       backup_share_text: `Mi copia de seguridad de Comenum:`,
       pos_label: `Posición de los botones`, pos_low: `Baja`, pos_mid: `Media`, pos_high: `Alta`,
+      snd_music: `Música de fondo`, snd_sfx: `Efectos de sonido`,
       themes: { classic: `Clásico`, ocean: `Océano`, sunset: `Atardecer`, forest: `Bosque`, candy: `Caramelo`, night: `Noche`, neon: `Neón`, gold: `Dorado`,
                 xmas: `Navidad`, summer: `Verano`, autumn: `Otoño`, spring: `Primavera` },
       funny: [`¡Eres más lento que un caracol! 🐌`, `¡Debes entrenar más los pulgares! 👍`, `¡Mi abuela es más rápida! 👵`,
@@ -1057,6 +1085,8 @@
       help11: `Ice number ❄️: eat it and everything slows down for a few seconds.`,
       help9: `Daily challenge: the same number sequence for everyone each day. You can challenge a friend with a link.`,
       help10: `In Statistics you can see your reaction time and your weekly progress. With the backup you can take your progress to another device.`,
+      help12: `At the top there are two sound buttons: 🎵 background music and 🔊 effects. Each one can be turned on or off separately (a crossed-out icon means it's off).`,
+      help13: `Make the game yours: from the pause screen ⏸️ you can change the button position and the color theme. In ⚙️ Settings (start menu) you can also choose your playing hand (left-handed mode), number size, colorblind-friendly colors, visual effects, and replay the tutorial.`,
       ok: `Got it`, close: `Close`,
       ios_title: `Install on iPhone`,
       ios1: `1. Open this page in <b>Safari</b>.`,
@@ -1138,6 +1168,7 @@
       backup_hint: `💾 Back up your progress`,
       backup_share_text: `My Comenum backup:`,
       pos_label: `Button position`, pos_low: `Low`, pos_mid: `Medium`, pos_high: `High`,
+      snd_music: `Background music`, snd_sfx: `Sound effects`,
       themes: { classic: `Classic`, ocean: `Ocean`, sunset: `Sunset`, forest: `Forest`, candy: `Candy`, night: `Night`, neon: `Neon`, gold: `Gold`,
                 xmas: `Christmas`, summer: `Summer`, autumn: `Autumn`, spring: `Spring` },
       funny: [`Slower than a snail! 🐌`, `Time to train those thumbs! 👍`, `My grandma is faster! 👵`,
@@ -1162,6 +1193,8 @@
       help11: `Nombre de glace ❄️ : quand tu le manges, tout ralentit pendant quelques secondes.`,
       help9: `Défi du jour : la même suite de nombres pour tout le monde chaque jour. Tu peux défier un ami avec un lien.`,
       help10: `Dans Statistiques, tu vois ton temps de réaction et ta progression par semaine. Avec la sauvegarde, tu peux emporter ta progression sur un autre appareil.`,
+      help12: `En haut, deux boutons de son : 🎵 la musique de fond et 🔊 les effets. Ils s'activent ou se coupent séparément (une icône barrée signifie que le son est coupé).`,
+      help13: `Personnalise le jeu : depuis la pause ⏸️ tu peux changer la position des boutons et le thème de couleur. Dans ⚙️ Réglages (menu de départ), tu peux aussi choisir la main de jeu (mode gaucher), la taille des nombres, les couleurs adaptées au daltonisme, les effets visuels et refaire le tutoriel.`,
       ok: `Compris`, close: `Fermer`,
       ios_title: `Installer sur iPhone`,
       ios1: `1. Ouvre cette page dans <b>Safari</b>.`,
@@ -1243,6 +1276,7 @@
       backup_hint: `💾 Fais une sauvegarde de ta progression`,
       backup_share_text: `Ma sauvegarde de Comenum :`,
       pos_label: `Position des boutons`, pos_low: `Basse`, pos_mid: `Moyenne`, pos_high: `Haute`,
+      snd_music: `Musique de fond`, snd_sfx: `Effets sonores`,
       themes: { classic: `Classique`, ocean: `Océan`, sunset: `Crépuscule`, forest: `Forêt`, candy: `Bonbon`, night: `Nuit`, neon: `Néon`, gold: `Or`,
                 xmas: `Noël`, summer: `Été`, autumn: `Automne`, spring: `Printemps` },
       funny: [`Plus lent qu'un escargot ! 🐌`, `Entraîne un peu plus tes pouces ! 👍`, `Ma grand-mère est plus rapide ! 👵`,
@@ -1267,6 +1301,8 @@
       help11: `Eiszahl ❄️: Wenn du sie isst, läuft alles ein paar Sekunden langsamer.`,
       help9: `Tagesaufgabe: Jeden Tag dieselbe Zahlenfolge für alle. Mit einem Link kannst du einen Freund herausfordern.`,
       help10: `Unter Statistiken siehst du deine Reaktionszeit und deine Entwicklung pro Woche. Mit der Sicherung nimmst du deinen Fortschritt auf ein anderes Gerät mit.`,
+      help12: `Oben findest du zwei Tonknöpfe: 🎵 Hintergrundmusik und 🔊 Effekte. Sie lassen sich getrennt ein- und ausschalten (ein durchgestrichenes Symbol bedeutet aus).`,
+      help13: `Passe das Spiel an: In der Pause ⏸️ kannst du die Position der Tasten und das Farbthema ändern. Unter ⚙️ Einstellungen (Startmenü) wählst du außerdem die Spielhand (Linkshändermodus), die Zahlengröße, farbenblindgerechte Farben, visuelle Effekte und kannst das Tutorial wiederholen.`,
       ok: `Verstanden`, close: `Schließen`,
       ios_title: `Auf dem iPhone installieren`,
       ios1: `1. Öffne diese Seite in <b>Safari</b>.`,
@@ -1348,6 +1384,7 @@
       backup_hint: `💾 Sichere deinen Fortschritt`,
       backup_share_text: `Meine Comenum-Sicherung:`,
       pos_label: `Position der Tasten`, pos_low: `Unten`, pos_mid: `Mitte`, pos_high: `Oben`,
+      snd_music: `Hintergrundmusik`, snd_sfx: `Soundeffekte`,
       themes: { classic: `Klassisch`, ocean: `Ozean`, sunset: `Sonnenuntergang`, forest: `Wald`, candy: `Bonbon`, night: `Nacht`, neon: `Neon`, gold: `Gold`,
                 xmas: `Weihnachten`, summer: `Sommer`, autumn: `Herbst`, spring: `Frühling` },
       funny: [`Langsamer als eine Schnecke! 🐌`, `Trainiere mehr deine Daumen! 👍`, `Meine Oma ist schneller! 👵`,
@@ -1372,6 +1409,8 @@
       help11: `Numero di ghiaccio ❄️: quando lo mangi, tutto rallenta per qualche secondo.`,
       help9: `Sfida del giorno: la stessa sequenza di numeri per tutti, ogni giorno. Puoi sfidare un amico con un link.`,
       help10: `In Statistiche vedi il tuo tempo di reazione e l'andamento settimanale. Con la copia di sicurezza porti i tuoi progressi su un altro dispositivo.`,
+      help12: `In alto ci sono due pulsanti audio: 🎵 musica di sottofondo e 🔊 effetti. Si attivano o si disattivano separatamente (un'icona barrata significa che è spento).`,
+      help13: `Personalizza il gioco: dalla pausa ⏸️ puoi cambiare la posizione dei pulsanti e il tema di colore. In ⚙️ Impostazioni (menu iniziale) puoi anche scegliere la mano di gioco (modalità mancino), la dimensione dei numeri, i colori adatti al daltonismo, gli effetti visivi e ripetere il tutorial.`,
       ok: `Ho capito`, close: `Chiudi`,
       ios_title: `Installa su iPhone`,
       ios1: `1. Apri questa pagina in <b>Safari</b>.`,
@@ -1453,6 +1492,7 @@
       backup_hint: `💾 Fai una copia di sicurezza dei tuoi progressi`,
       backup_share_text: `Il mio backup di Comenum:`,
       pos_label: `Posizione dei pulsanti`, pos_low: `Bassa`, pos_mid: `Media`, pos_high: `Alta`,
+      snd_music: `Musica di sottofondo`, snd_sfx: `Effetti sonori`,
       themes: { classic: `Classico`, ocean: `Oceano`, sunset: `Tramonto`, forest: `Foresta`, candy: `Caramella`, night: `Notte`, neon: `Neon`, gold: `Oro`,
                 xmas: `Natale`, summer: `Estate`, autumn: `Autunno`, spring: `Primavera` },
       funny: [`Più lento di una lumaca! 🐌`, `Devi allenare di più i pollici! 👍`, `Mia nonna è più veloce! 👵`,
@@ -1477,6 +1517,8 @@
       help11: `Número de gelo ❄️: ao comê-lo, tudo fica mais lento por alguns segundos.`,
       help9: `Desafio diário: a mesma sequência de números para todos, a cada dia. Você pode desafiar um amigo com um link.`,
       help10: `Em Estatísticas você vê seu tempo de reação e sua evolução semanal. Com a cópia de segurança você leva seu progresso para outro dispositivo.`,
+      help12: `No topo há dois botões de som: 🎵 música de fundo e 🔊 efeitos. Cada um liga ou desliga separadamente (um ícone riscado significa que está desligado).`,
+      help13: `Personalize o jogo: na pausa ⏸️ você pode mudar a posição dos botões e o tema de cor. Em ⚙️ Ajustes (menu inicial) você também escolhe a mão de jogo (modo canhoto), o tamanho dos números, as cores para daltonismo, os efeitos visuais e pode repetir o tutorial.`,
       ok: `Entendi`, close: `Fechar`,
       ios_title: `Instalar no iPhone`,
       ios1: `1. Abra esta página no <b>Safari</b>.`,
@@ -1558,6 +1600,7 @@
       backup_hint: `💾 Faça uma cópia de segurança do seu progresso`,
       backup_share_text: `Meu backup do Comenum:`,
       pos_label: `Posição dos botões`, pos_low: `Baixa`, pos_mid: `Média`, pos_high: `Alta`,
+      snd_music: `Música de fundo`, snd_sfx: `Efeitos sonoros`,
       themes: { classic: `Clássico`, ocean: `Oceano`, sunset: `Pôr do sol`, forest: `Floresta`, candy: `Doce`, night: `Noite`, neon: `Neon`, gold: `Ouro`,
                 xmas: `Natal`, summer: `Verão`, autumn: `Outono`, spring: `Primavera` },
       funny: [`Mais lento que uma lesma! 🐌`, `Treine mais esses polegares! 👍`, `Minha avó é mais rápida! 👵`,
@@ -1589,6 +1632,8 @@
     document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
     $('bkIn').placeholder = t('backup_paste');
     $('langSel').value = lang;
+    $('btnMusic').setAttribute('aria-label', t('snd_music')); $('btnMusic').title = t('snd_music');
+    $('btnSfx').setAttribute('aria-label', t('snd_sfx')); $('btnSfx').title = t('snd_sfx');
     renderPosChips();
     renderThemeChips();
     renderSettings();
@@ -1640,7 +1685,7 @@
     if (audioCtx.state !== 'running') { try { audioCtx.resume(); } catch (e) {} }
   }
   function tone(f, d, type = 'sine', v = 0.12, delay = 0, to = null) {
-    if (!audioCtx || muted) return;
+    if (!audioCtx || mutedSfx) return;
     const tm = audioCtx.currentTime + delay;
     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.type = type;
@@ -1719,7 +1764,7 @@
     musTimer = setTimeout(musicLoop, 250);
     if (!mus || !audioCtx) return;
     const now = audioCtx.currentTime;
-    const active = S.playing && !S.paused && !muted && !document.hidden;
+    const active = S.playing && !S.paused && !mutedMusic && !document.hidden;
     if (!active) {
       if (!musOff) { mus.gain.gain.setTargetAtTime(0.0001, now, 0.25); musOff = true; }
       return;
@@ -1864,7 +1909,12 @@
   }
   function open(id) { $(id).classList.add('open'); }
   function close(id) { $(id).classList.remove('open'); }
-  function updateSoundIcon() { $('btnSound').textContent = muted ? '🔇' : '🔊'; }
+  function updateSoundIcons() {
+    $('btnMusic').classList.toggle('off', mutedMusic);
+    $('btnSfx').classList.toggle('off', mutedSfx);
+    $('btnMusic').setAttribute('aria-pressed', String(!mutedMusic));
+    $('btnSfx').setAttribute('aria-pressed', String(!mutedSfx));
+  }
 
   // ---------- Efectos visuales (partículas muy discretas, colores neutros) ----------
   const FXC = {
@@ -3286,12 +3336,21 @@
   $('bkFile').addEventListener('change', bkFileChosen);
   $('btnShareStart').addEventListener('click', shareStart);
   $('btnShareOver').addEventListener('click', shareCard);
-  $('btnSound').addEventListener('click', () => {
+  $('btnMusic').addEventListener('click', () => {
     ensureAudio();
-    muted = !muted;
-    lsSet('comenum_mute', muted ? '1' : '0');
-    updateSoundIcon();
-    if (!muted) sfx('button');
+    mutedMusic = !mutedMusic;
+    lsSet('comenum_music', mutedMusic ? '0' : '1');
+    updateSoundIcons();
+    sfx('button');
+    track('snd/music-' + (mutedMusic ? 'off' : 'on'), 'Música ' + (mutedMusic ? 'apagada' : 'encendida'));
+  });
+  $('btnSfx').addEventListener('click', () => {
+    ensureAudio();
+    mutedSfx = !mutedSfx;
+    lsSet('comenum_sfx', mutedSfx ? '0' : '1');
+    updateSoundIcons();
+    sfx('button');
+    track('snd/sfx-' + (mutedSfx ? 'off' : 'on'), 'Efectos ' + (mutedSfx ? 'apagados' : 'encendidos'));
   });
   $('langSel').addEventListener('change', e => {
     lang = e.target.value;
@@ -3357,7 +3416,7 @@
   applyTheme();
   applyAccess();
   applyPos();
-  updateSoundIcon();
+  updateSoundIcons();
   hud();
   requestAnimationFrame(loop);
 
